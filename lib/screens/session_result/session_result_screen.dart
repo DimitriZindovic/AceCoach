@@ -135,6 +135,7 @@ class SessionResultScreen extends ConsumerWidget {
                         label: 'Regenerate',
                         icon: Icons.refresh_rounded,
                         variant: AppButtonVariant.neutral,
+                        dense: true,
                         onPressed: state.isGenerating
                             ? null
                             : notifier.regenerate,
@@ -144,6 +145,7 @@ class SessionResultScreen extends ConsumerWidget {
                     Expanded(
                       child: PrimaryButton(
                         label: isSaved ? 'Saved' : 'Save',
+                        dense: true,
                         icon: isSaved
                             ? Icons.check_rounded
                             : Icons.save_alt_rounded,

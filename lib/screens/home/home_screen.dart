@@ -89,11 +89,23 @@ class HomeScreen extends ConsumerWidget {
                                 ),
                               ),
                               const SizedBox(height: 2),
-                              Text(
-                                'Hi ${user?.firstName ?? 'there'} 👋',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: text.headlineSmall,
+                              Row(
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      'Hi ${user?.firstName ?? 'there'}',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: text.headlineSmall,
+                                    ),
+                                  ),
+                                  const SizedBox(width: AppSpacing.xs),
+                                  const Icon(
+                                    Icons.waving_hand_rounded,
+                                    size: 22,
+                                    color: AppColors.tipIcon,
+                                  ),
+                                ],
                               ),
                             ],
                           ),
@@ -287,8 +299,11 @@ class _RecentSessions extends StatelessWidget {
         AsyncValue(hasError: true) => const _RecentEmpty(
           message: 'Your history could not be loaded.',
         ),
-        _ => const Row(
-          children: [
+        _ => ListView(
+          scrollDirection: Axis.horizontal,
+          clipBehavior: Clip.none,
+          physics: const NeverScrollableScrollPhysics(),
+          children: const [
             SkeletonBox(
               width: RecentSessionCard.width,
               height: _height,
@@ -365,12 +380,12 @@ class _StatsStrip extends StatelessWidget {
           children: [
             _Stat(value: '${stats.savedCount}', label: 'Sessions'),
             VerticalDivider(
-              width: AppSpacing.xl * 2,
+              width: AppSpacing.xl + AppSpacing.md,
               color: scheme.outlineVariant,
             ),
             _Stat(value: stats.totalTimeLabel, label: 'On court'),
             VerticalDivider(
-              width: AppSpacing.xl * 2,
+              width: AppSpacing.xl + AppSpacing.md,
               color: scheme.outlineVariant,
             ),
             _Stat(value: stats.topStroke?.label ?? '—', label: 'Top stroke'),
@@ -396,11 +411,10 @@ class _Stat extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              value,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: text.titleLarge,
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(value, maxLines: 1, style: text.titleLarge),
             ),
             Text(
               label,

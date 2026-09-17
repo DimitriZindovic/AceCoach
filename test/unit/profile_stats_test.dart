@@ -17,12 +17,7 @@ void main() {
   test('only completed sessions count toward time and top stroke', () {
     final done = DateTime(2026, 9, 16);
     final stats = ProfileStats.fromSessions([
-      Fixtures.session(
-        id: 'a',
-        durationMinutes: 75,
-        completedAt: done,
-        strokes: {Stroke.forehand, Stroke.serve},
-      ),
+      Fixtures.session(id: 'a', completedAt: done),
       Fixtures.session(
         id: 'b',
         durationMinutes: 45,

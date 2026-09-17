@@ -17,6 +17,7 @@ class SplashScreen extends StatelessWidget {
       body: DecoratedBox(
         decoration: const BoxDecoration(gradient: AppColors.splashGradient),
         child: Stack(
+          fit: StackFit.expand,
           children: [
             const Positioned(top: -120, right: -220, child: _Ring(size: 520)),
             const Positioned(bottom: -90, left: -120, child: _Ring(size: 340)),

@@ -263,12 +263,12 @@ class _SettingsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Container(
+    return Material(
+      color: scheme.surface,
       clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: scheme.surface,
+      shape: RoundedRectangleBorder(
         borderRadius: AppRadius.circular(AppRadius.xl),
-        border: Border.all(color: scheme.outlineVariant),
+        side: BorderSide(color: scheme.outlineVariant),
       ),
       child: Column(
         children: [

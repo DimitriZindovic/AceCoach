@@ -76,7 +76,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const AppLogoBadge(),
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: AppLogoBadge(),
+                ),
                 const SizedBox(height: AppSpacing.sm),
                 Text('Create your account', style: text.headlineMedium),
                 const SizedBox(height: AppSpacing.sm),

@@ -83,119 +83,126 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 constraints: BoxConstraints(
                   minHeight: constraints.maxHeight - 36,
                 ),
-                child: Form(
-                  key: _formKey,
-                  autovalidateMode: AutovalidateMode.onUserInteraction,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const AppLogoBadge(),
-                      const SizedBox(height: AppSpacing.sm),
-                      Text('Welcome back', style: text.headlineMedium),
-                      const SizedBox(height: AppSpacing.sm),
-                      Text(
-                        'Pick up your training plan where you left off.',
-                        style: text.bodySmall,
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
-                      LabeledField(
-                        label: 'Email',
-                        child: TextFormField(
-                          controller: _emailController,
-                          keyboardType: TextInputType.emailAddress,
-                          textInputAction: TextInputAction.next,
-                          autofillHints: const [AutofillHints.email],
-                          autocorrect: false,
-                          enabled: !isLoading,
-                          decoration: const InputDecoration(
-                            hintText: 'you@example.com',
-                            prefixIcon: Icon(
-                              Icons.mail_outline_rounded,
-                              size: 18,
-                            ),
-                          ),
-                          validator: AuthValidators.email,
+                // IntrinsicHeight lets the Spacer push the footer down while
+                // the content still scrolls on small screens.
+                child: IntrinsicHeight(
+                  child: Form(
+                    key: _formKey,
+                    autovalidateMode: AutovalidateMode.onUserInteraction,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Align(
+                          alignment: Alignment.centerLeft,
+                          child: AppLogoBadge(),
                         ),
-                      ),
-                      const SizedBox(height: AppSpacing.sm + 2),
-                      LabeledField(
-                        label: 'Password',
-                        child: TextFormField(
-                          controller: _passwordController,
-                          obscureText: _obscurePassword,
-                          textInputAction: TextInputAction.done,
-                          autofillHints: const [AutofillHints.password],
-                          enabled: !isLoading,
-                          onFieldSubmitted: (_) => _submit(),
-                          decoration: InputDecoration(
-                            hintText: '••••••••',
-                            prefixIcon: const Icon(
-                              Icons.lock_outline_rounded,
-                              size: 18,
-                            ),
-                            suffixIcon: IconButton(
-                              tooltip: _obscurePassword
-                                  ? 'Show password'
-                                  : 'Hide password',
-                              onPressed: () => setState(
-                                () => _obscurePassword = !_obscurePassword,
-                              ),
-                              icon: Icon(
-                                _obscurePassword
-                                    ? Icons.visibility_outlined
-                                    : Icons.visibility_off_outlined,
+                        const SizedBox(height: AppSpacing.sm),
+                        Text('Welcome back', style: text.headlineMedium),
+                        const SizedBox(height: AppSpacing.sm),
+                        Text(
+                          'Pick up your training plan where you left off.',
+                          style: text.bodySmall,
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
+                        LabeledField(
+                          label: 'Email',
+                          child: TextFormField(
+                            controller: _emailController,
+                            keyboardType: TextInputType.emailAddress,
+                            textInputAction: TextInputAction.next,
+                            autofillHints: const [AutofillHints.email],
+                            autocorrect: false,
+                            enabled: !isLoading,
+                            decoration: const InputDecoration(
+                              hintText: 'you@example.com',
+                              prefixIcon: Icon(
+                                Icons.mail_outline_rounded,
                                 size: 18,
                               ),
                             ),
+                            validator: AuthValidators.email,
                           ),
-                          validator: AuthValidators.password,
                         ),
-                      ),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          onPressed: isLoading ? null : _forgotPassword,
-                          child: const Text('Forgot password?'),
+                        const SizedBox(height: AppSpacing.sm + 2),
+                        LabeledField(
+                          label: 'Password',
+                          child: TextFormField(
+                            controller: _passwordController,
+                            obscureText: _obscurePassword,
+                            textInputAction: TextInputAction.done,
+                            autofillHints: const [AutofillHints.password],
+                            enabled: !isLoading,
+                            onFieldSubmitted: (_) => _submit(),
+                            decoration: InputDecoration(
+                              hintText: '••••••••',
+                              prefixIcon: const Icon(
+                                Icons.lock_outline_rounded,
+                                size: 18,
+                              ),
+                              suffixIcon: IconButton(
+                                tooltip: _obscurePassword
+                                    ? 'Show password'
+                                    : 'Hide password',
+                                onPressed: () => setState(
+                                  () => _obscurePassword = !_obscurePassword,
+                                ),
+                                icon: Icon(
+                                  _obscurePassword
+                                      ? Icons.visibility_outlined
+                                      : Icons.visibility_off_outlined,
+                                  size: 18,
+                                ),
+                              ),
+                            ),
+                            validator: AuthValidators.password,
+                          ),
                         ),
-                      ),
-                      if (failure != null) ...[
-                        AuthErrorBanner(message: failure.message),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: isLoading ? null : _forgotPassword,
+                            child: const Text('Forgot password?'),
+                          ),
+                        ),
+                        if (failure != null) ...[
+                          AuthErrorBanner(message: failure.message),
+                          const SizedBox(height: AppSpacing.md),
+                        ] else
+                          const SizedBox(height: AppSpacing.xs),
+                        PrimaryButton(
+                          label: 'Log in',
+                          onPressed: _submit,
+                          isLoading: isLoading,
+                        ),
                         const SizedBox(height: AppSpacing.md),
-                      ] else
-                        const SizedBox(height: AppSpacing.xs),
-                      PrimaryButton(
-                        label: 'Log in',
-                        onPressed: _submit,
-                        isLoading: isLoading,
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      PrimaryButton(
-                        label: 'Create account',
-                        variant: AppButtonVariant.outline,
-                        onPressed: isLoading
-                            ? null
-                            : () => context.push(RegisterScreen.routePath),
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
-                      const OrDivider(),
-                      const SizedBox(height: AppSpacing.lg),
-                      PrimaryButton(
-                        label: 'Sign in with Google',
-                        variant: AppButtonVariant.neutral,
-                        leading: const GoogleGlyph(),
-                        onPressed: isLoading ? null : _signInWithGoogle,
-                      ),
-                      const Spacer(),
-                      const SizedBox(height: AppSpacing.lg),
-                      Text(
-                        'By continuing you accept our Terms & Privacy Policy',
-                        textAlign: TextAlign.center,
-                        style: text.labelSmall?.copyWith(
-                          fontWeight: FontWeight.w400,
-                          color: AppColors.textTertiary,
+                        PrimaryButton(
+                          label: 'Create account',
+                          variant: AppButtonVariant.outline,
+                          onPressed: isLoading
+                              ? null
+                              : () => context.push(RegisterScreen.routePath),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: AppSpacing.lg),
+                        const OrDivider(),
+                        const SizedBox(height: AppSpacing.lg),
+                        PrimaryButton(
+                          label: 'Sign in with Google',
+                          variant: AppButtonVariant.neutral,
+                          leading: const GoogleGlyph(),
+                          onPressed: isLoading ? null : _signInWithGoogle,
+                        ),
+                        const Spacer(),
+                        const SizedBox(height: AppSpacing.lg),
+                        Text(
+                          'By continuing you accept our Terms & Privacy Policy',
+                          textAlign: TextAlign.center,
+                          style: text.labelSmall?.copyWith(
+                            fontWeight: FontWeight.w400,
+                            color: AppColors.textTertiary,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),

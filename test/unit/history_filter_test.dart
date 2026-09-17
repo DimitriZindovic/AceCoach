@@ -7,12 +7,7 @@ import '../helpers/fixtures.dart';
 
 void main() {
   final sessions = [
-    Fixtures.session(
-      id: 'a',
-      title: 'Aggressive baseline & first serve',
-      createdAt: DateTime(2026, 9, 15),
-      strokes: {Stroke.forehand, Stroke.serve},
-    ),
+    Fixtures.session(id: 'a', createdAt: DateTime(2026, 9, 15)),
     Fixtures.session(
       id: 'b',
       title: 'Serve rhythm ladder',

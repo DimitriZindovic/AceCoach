@@ -1,3 +1,6 @@
+// Explicit default arguments document the contract verified on the mock.
+// ignore_for_file: avoid_redundant_argument_values
+
 import 'package:ace_coach/models/exercise.dart';
 import 'package:ace_coach/models/failures.dart';
 import 'package:ace_coach/models/session_params.dart';

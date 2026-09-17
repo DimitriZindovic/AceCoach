@@ -29,6 +29,7 @@ class PrimaryButton extends StatelessWidget {
     this.isLoading = false,
     this.variant = AppButtonVariant.primary,
     this.height = AppSizes.buttonHeight,
+    this.dense = false,
   });
 
   final String label;
@@ -40,6 +41,9 @@ class PrimaryButton extends StatelessWidget {
   final bool isLoading;
   final AppButtonVariant variant;
   final double height;
+
+  /// 14 dp label and 17 dp icon, for two buttons side by side.
+  final bool dense;
 
   bool get _enabled => onPressed != null && !isLoading;
 
@@ -87,7 +91,7 @@ class PrimaryButton extends StatelessWidget {
                   leading!,
                   const SizedBox(width: AppSpacing.sm + 2),
                 ] else if (icon != null) ...[
-                  Icon(icon, size: 18),
+                  Icon(icon, size: dense ? 17 : 18),
                   const SizedBox(width: AppSpacing.sm),
                 ],
                 Flexible(child: Text(label, overflow: TextOverflow.ellipsis)),
@@ -98,6 +102,12 @@ class PrimaryButton extends StatelessWidget {
     final shape = RoundedRectangleBorder(
       borderRadius: AppRadius.circular(AppRadius.lg),
     );
+    final textStyle = dense
+        ? Theme.of(context).textTheme.labelLarge?.copyWith(fontSize: 14)
+        : null;
+    final padding = dense
+        ? const EdgeInsets.symmetric(horizontal: AppSpacing.md)
+        : null;
     final Widget button;
     if (variant == AppButtonVariant.primary) {
       button = FilledButton(
@@ -105,6 +115,8 @@ class PrimaryButton extends StatelessWidget {
         style: FilledButton.styleFrom(
           minimumSize: Size.fromHeight(height),
           shape: shape,
+          textStyle: textStyle,
+          padding: padding,
         ),
         child: child,
       );
@@ -117,6 +129,8 @@ class PrimaryButton extends StatelessWidget {
           minimumSize: Size.fromHeight(height),
           side: border,
           shape: shape,
+          textStyle: textStyle,
+          padding: padding,
         ),
         child: child,
       );

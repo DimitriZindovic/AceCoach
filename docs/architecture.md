@@ -1,8 +1,7 @@
 # AceCoach — Architecture
 
-> Status: **plan** (phase 1). Written before any feature code. Sections marked
-> `PENDING DESIGN IMPORT` will be completed once the Claude Design project has
-> been imported (see §9).
+> Status: **as built**. Written as a plan before any feature code, then
+> updated to match the shipped implementation.
 
 AceCoach is a Flutter (iOS + Android) app that generates personalised tennis
 training sessions with Gemini, taking the day's weather into account. Sessions
@@ -57,6 +56,7 @@ Rules enforced in code review and by `riverpod_lint`:
 
 | Screen | File | Purpose |
 |---|---|---|
+| Splash | `screens/auth/splash_screen.dart` | Gradient splash while the first auth event resolves (design 01) |
 | Login | `screens/auth/login_screen.dart` | Email/password + Google sign-in, "forgot password" sheet |
 | Register | `screens/auth/register_screen.dart` | Account creation with inline validation |
 | Home | `screens/home/home_screen.dart` | Greeting, `WeatherChip`, "New session" CTA, recent sessions, bottom navigation |
@@ -66,8 +66,10 @@ Rules enforced in code review and by `riverpod_lint`:
 | Session detail | `screens/history/session_detail_screen.dart` | Full read-only view of a saved session (offline) |
 | Profile | `screens/profile/profile_screen.dart` | Stats, personal info, theme, sign out |
 
-Home, History and Profile share a bottom navigation bar inside a
-`StatefulShellRoute` so each tab keeps its own navigation stack.
+Home, New (setup), History and Profile are the four destinations of the
+bottom navigation bar (as in the design), inside a `StatefulShellRoute` so each
+tab keeps its own navigation stack. The result and detail screens are pushed on
+the root navigator, above the bar.
 
 ---
 
@@ -75,29 +77,29 @@ Home, History and Profile share a bottom navigation bar inside a
 
 | Path | Name | Screen | Guard |
 |---|---|---|---|
+| `/splash` | `splash` | `SplashScreen` | shown while the first auth event is pending |
 | `/login` | `login` | `LoginScreen` | public (redirects to `/` when signed in) |
 | `/register` | `register` | `RegisterScreen` | public (redirects to `/` when signed in) |
 | `/` | `home` | `HomeScreen` | auth required — shell tab 0 |
-| `/history` | `history` | `HistoryScreen` | auth required — shell tab 1 |
-| `/history/:sessionId` | `sessionDetail` | `SessionDetailScreen` | auth required — pushed on tab 1 |
-| `/profile` | `profile` | `ProfileScreen` | auth required — shell tab 2 |
-| `/setup` | `sessionSetup` | `SessionSetupScreen` | auth required — full-screen, outside the shell |
-| `/setup/result` | `sessionResult` | `SessionResultScreen` | auth required — full-screen, outside the shell |
+| `/setup` | `sessionSetup` | `SessionSetupScreen` | auth required — shell tab 1 |
+| `/setup/result` | `sessionResult` | `SessionResultScreen` | auth required — root navigator (no bar) |
+| `/history` | `history` | `HistoryScreen` | auth required — shell tab 2 |
+| `/history/:sessionId` | `sessionDetail` | `SessionDetailScreen` | auth required — root navigator (no bar) |
+| `/profile` | `profile` | `ProfileScreen` | auth required — shell tab 3 |
 
 Redirect guard (`app_router.dart`):
 
 ```
-authState = ref.watch(authStateProvider)      // AsyncValue<AppUser?>
-if authState.isLoading            → stay (splash / no redirect)
-if user == null && !isAuthRoute   → '/login'
-if user != null &&  isAuthRoute   → '/'
-else                              → null
+auth = ref.read(authStateProvider)            // AsyncValue<AppUser?>
+if auth.isLoading && !auth.hasValue → '/splash' (stay if already there)
+if user == null                      → '/login' unless on an auth route
+if user != null && (authRoute|splash)→ '/'
+else                                 → null
 ```
 
-The router is itself a `@riverpod` provider (`appRouterProvider`) so the
-redirect re-evaluates whenever the Firebase auth stream emits. A
-`GoRouterRefreshStream`-style `Listenable` bridges the stream to
-`refreshListenable`.
+The router is itself a `@riverpod` provider (`appRouterProvider`); it listens
+to `authStateProvider` and pokes a `ChangeNotifier` passed as
+`refreshListenable`, so the redirect re-evaluates whenever Firebase emits.
 
 Each screen exposes `static const routePath` / `routeName` constants, mirroring
 the `static const routeName` habit from `flutter_cours`.
@@ -171,15 +173,21 @@ Files:
 
 | File | Providers |
 |---|---|
-| `providers/auth_provider.dart` | `firebaseAuth`, `authService`, `authRepository`, `authState`, `AuthController` |
-| `providers/weather_provider.dart` | `dio`, `weatherApiService`, `locationService`, `weatherRepository`, `ManualCityNotifier`, `currentWeather` |
-| `providers/session_form_provider.dart` | `SessionFormNotifier` (holds `SessionParams` + current step + `isValid`) |
-| `providers/session_generation_provider.dart` | `geminiModel`, `aiService`, `localDatabase`, `sessionRepository`, `SessionGenerationNotifier` |
-| `providers/session_history_provider.dart` | `HistoryFilterNotifier`, `sessionHistory`, `profileStats` |
+| `providers/app_settings_provider.dart` | `localDatabase`, `AppThemeMode`, `HomeCity` (both persisted in the drift key-value table) |
+| `providers/auth_provider.dart` | `firebaseAuth`, `authService`, `authRepository`, `authState`, `currentUser`, `AuthController` |
+| `providers/weather_provider.dart` | `dio`, `weatherApiService`, `locationService`, `weatherRepository`, `currentWeather` |
+| `providers/session_form_provider.dart` | `SessionForm` (holds `SessionParams`; `isValid` lives on the model) |
+| `providers/session_generation_provider.dart` | `aiService`, `sessionRepository`, `SessionGeneration` (`SessionGenerationState`: session / isGenerating / failure), `isCurrentSessionSaved` |
+| `providers/session_history_provider.dart` | `sessionHistory`, `savedSession(id)`, `HistoryFilterNotifier`, `filteredHistory`, `profileStats`, `HistoryActions` |
 
-`SessionGenerationNotifier` is `keepAlive: false`: leaving the result screen
-disposes the in-flight generation. `currentWeather` is cached for 30 minutes
-via `ref.cacheFor` (a small extension) so tab switches do not refetch.
+`SessionGeneration` is `keepAlive: true` so the plan survives leaving and
+re-entering the result screen; its state is an explicit three-state object
+rather than an `AsyncValue`, because Riverpod 3 no longer lets a notifier keep
+the previous value while loading, and the design shows the previous plan behind
+the regeneration overlay. `currentWeather` is `keepAlive` and re-invalidates
+itself after 30 minutes. The `ProviderContainer` is created with
+`retry: (_, _) => null` so failing providers surface their error state at once
+instead of retrying in the background.
 
 ---
 
@@ -295,6 +303,8 @@ training_sessions
   strokes               TEXT  NOT NULL     comma-separated enum names
   weather_json          TEXT  NULL         WeatherSnapshot as JSON, null if unavailable
   weather_used          BOOL  NOT NULL
+  weather_advice        TEXT  NULL         one-sentence advice returned by the model
+  prefer_indoor         BOOL  NOT NULL
   completed_at          INT   NULL         set when the user marks it done (stats)
 
 exercises
@@ -308,15 +318,24 @@ exercises
   phase                 TEXT  NOT NULL     warmUp | main | coolDown
   indoor_friendly       BOOL  NOT NULL
 
-indexes: training_sessions(user_id, created_at DESC), exercises(session_id, position)
+app_settings
+  key                   TEXT  PK           theme_mode | home_city
+  value                 TEXT  NOT NULL
+
+primary keys: training_sessions(id), exercises(session_id, position), app_settings(key)
 ```
+
+Row classes are generated as `TrainingSessionRow` / `ExerciseRow` /
+`AppSettingRow` (`@DataClassName`) so they never clash with the domain models.
 
 Queries exposed by `LocalDatabaseService`:
 
 - `watchSessions(userId)` → `Stream<List<TrainingSession>>` (joins exercises)
+- `findSession(id)`
 - `insertSession(session)` — transaction: session row + exercise rows
 - `deleteSession(id)`
-- `markCompleted(id, DateTime)`
+- `setCompleted(id, DateTime?)`
+- `readSetting(key)` / `writeSetting(key, value)`
 
 Search and filters (`HistoryFilterNotifier`) are applied **in Dart** on the
 watched list: the data set is small (hundreds of rows at most), keeping the
@@ -336,8 +355,12 @@ derived the same way.
 | `WeatherSnapshot` | freezed + json | `fromJson` for the OWM payload + `fromOpenWeatherMap()` mapper; `isOutdoorFriendly` getter |
 
 Enums (`SkillLevel`, `Stroke`, `TacticalGoal`, `PlayerCount`, `ExercisePhase`)
-live next to `SessionParams` with a `label` getter and, where useful, an
-`icon` getter, so widgets never switch on enum values.
+live next to their model with a `label` getter. Icons are mapped in the widget
+layer (`goalIcon`, `weatherIcon`) so models never import Flutter.
+
+`models/failures.dart` holds the sealed `AppFailure` hierarchy (`AiFailure`,
+`WeatherFailure`, `AuthFailure`), each with a user-facing message, so raw
+exception strings never reach a screen.
 
 ---
 
@@ -379,21 +402,68 @@ wins for style**:
 
 ---
 
-## 9. Design tokens — `PENDING DESIGN IMPORT`
+## 9. Design tokens (from `design/AceCoach.dc.html`)
 
-The Claude Design project
-`https://claude.ai/design/p/c3836bc8-b2ad-4392-a845-8b5514218b82` could not
-be read from this session: no `claude_design` MCP server is configured and
-`DesignSync` requires a one-time `/design-login` from an interactive session.
-No palette has been invented in the meantime.
+The Claude Design project "AceCoach mobile app mockup" (7 frames, 360 × 640
+at 1:3 of 1080 × 1920) is checked in under `design/` for reference. Every value
+below is read from it; the only derived values are the dark-mode surfaces.
 
-To fill in: colour palette (light/dark), type scale and font family, spacing
-rhythm, corner radii, elevation, component anatomy for buttons / cards /
-chips / slider / bottom bar, and the list of screens present in the design.
-Everything in `constants/app_colors.dart`, `app_themes.dart` and
-`app_spacing.dart` will be derived from those values.
+**Typography** — Poppins 400 / 500 / 600 / 700 (bundled, OFL).
 
----
+| Slot | Size / weight | Used for |
+|---|---|---|
+| `displaySmall` | 40 / 700 | splash wordmark |
+| `headlineMedium` | 26 / 700 | auth title |
+| `headlineSmall` | 22 / 700 | greeting, result title |
+| `titleLarge` | 20 / 700 | screen titles, stat values |
+| `titleMedium` | 17 / 600 | app bar |
+| `titleSmall` | 15 / 600 | section headings |
+| `bodyLarge/Medium/Small` | 16 / 14 / 13 | body, inputs, meta |
+| `labelLarge/Medium/Small` | 15 / 12 / 11 · 600 | buttons, chips, eyebrow |
+| `sectionLabel`, `fieldLabel`, `caption`, `badge` | 13/600 · 11/600 · 12/400 · 10/600 | extension `AppTextStyles` |
+
+**Colours** (`AppColors`)
+
+| Token | Hex | Role |
+|---|---|---|
+| `primary` / `primaryDark` / `primaryDeep` | `#4CAF50` / `#2E7D32` / `#1B5E20` | brand greens |
+| `primaryContainer` | `#E8F5E9` | icon boxes, duration badge |
+| `lime` / `limeDark` | `#DCE775` / `#A8D24A` | accent, selected strokes, splash gradient |
+| `ink` | `#101512` | text, dark surfaces (CTA card, result header) |
+| `textSecondary` / `textTertiary` / `textDisabled` / `chevron` | `#5C6660` / `#8A948E` / `#A9B2AC` / `#C3CAC5` | text hierarchy |
+| `background` / `canvas` / `surface` | `#FAFAFA` / `#EDEFEC` / `#FFFFFF` | grounds |
+| `surfaceMuted` / `surfaceMutedAlt` / `hairline` / `outline` | `#F2F4F2` / `#F4F6F4` / `#EFF1EF` / `#E0E4E0` | chips, dividers, borders |
+| `warningSurface` / `warningBorder` / `warningText` | `#FFF8E1` / `#F5E6A8` / `#6B5B12` | weather banner |
+| `tipSurface` / `tipIcon` | `#FFFDF2` / `#B59A0A` | technical tip box |
+| `error` / `errorContainer` | `#C62828` / `#FFCDD2` | destructive |
+| `darkBackground` … `darkOutline` | `#101512` `#171C19` `#1F2521` `#242A26` `#2E352F` | **derived** dark surfaces |
+
+**Shape and spacing** (`AppRadius`, `AppSpacing`, `AppSizes`, `AppShadows`)
+
+- Radii: 8 badge · 10 icon box · 14 input / goal card · 16 button / banner ·
+  18 card · 20 pill / CTA · 23 search · 34 phone frame.
+- Screen padding 22 dp; section gap 18; component gaps 4 / 6 / 8 / 10 / 12 / 16.
+- Buttons 50 dp (CTA 54), inputs 52, search 46, tap targets ≥ 48.
+- Shadows: card `0 2 8 ink@5%`, primary glow `0 8 18 primary@32%`, brand glow
+  `0 8 18 primaryDark@22%`.
+
+**Screens covered by the design**: splash, login, home, setup, generated
+session, history, profile. **Designed from the same tokens**: register,
+forgot-password sheet, session detail (reuses the result anatomy), theme
+sheet, home-city dialog, and every loading / error / empty state.
+
+**Design vs. specification arbitration**
+
+- The design shows the setup as a single scrolling page, not a stepper; the
+  design wins (§1.1 of the brief makes it the source of truth for layouts).
+- The design's bottom bar has four destinations including "New"; the setup
+  screen is therefore a shell tab, not a full-screen push.
+- "Players present" and the "indoor only" switch are not in the mockup; they
+  use the pill and tile components already present on that screen.
+- The design displays °F; the app stores and shows °C (`units=metric`).
+- The history badge in the design ("SYNCED" / "LOCAL") maps to
+  "DONE" / "PLANNED" since sessions are local only and completion feeds the
+  stats.
 
 ## 10. Tooling facts recorded during planning
 
@@ -401,29 +471,48 @@ Everything in `constants/app_colors.dart`, `app_themes.dart` and
 - Existing project: `~/Sites/ace_coach` (package `ace_coach`), Android only —
   iOS must be added with `flutter create --platforms=ios .`.
 - Not yet a git repository.
-- `firebase` and `flutterfire` CLIs are not installed.
+- `firebase` and `flutterfire` CLIs are not installed; CocoaPods and the
+  Android SDK are missing on the build machine, so native builds were not run
+  here (see README quality gates for what was verified).
 - pub.dev, 2026-09-17: flutter_riverpod 3.4.3 · riverpod_annotation 4.0.7 ·
   riverpod_generator 4.0.9 · riverpod_lint 3.1.9 · custom_lint 0.8.1 ·
   go_router 18.0.1 · firebase_core 4.15.0 · firebase_auth 6.7.0 ·
   google_sign_in 7.2.0 · dio 5.11.1 · freezed 4.0.1 · freezed_annotation 3.1.0 ·
   json_serializable 6.14.1 · json_annotation 4.12.0 · build_runner 2.16.1 ·
   drift 2.35.0 · drift_flutter 0.3.1 · drift_dev 2.35.0 ·
-  google_generative_ai 0.4.7 (last release 2025-04, README marked
-  **[Deprecated]** in favour of `firebase_ai` 4.0.0) · flutter_dotenv 6.0.1 ·
+  firebase_ai 4.0.0 (replaces `google_generative_ai`, whose README is marked
+  **[Deprecated]** by Google) · flutter_dotenv 6.0.1 ·
   geolocator 14.0.3 · google_fonts 8.2.1 · intl 0.20.3 · flutter_lints 6.0.0 ·
   mocktail 1.0.5 · uuid 4.6.0.
 
 ---
 
-## 11. Open questions (blocking phase 2)
+## 11. Decisions taken after the plan review
 
-1. **Design import** — needs `/design-login` in an interactive Claude Code
-   session on this machine, or the exported `AceCoach.dc.html` + `support.js`
-   dropped into `design/` at the project root.
-2. **Project location** — the spec says `acecoach_app/`; this plan assumes we
-   build inside the existing `~/Sites/ace_coach` (package `ace_coach`) that is
-   already open in the IDE.
-3. **Gemini SDK** — the spec mandates `google_generative_ai`, whose README is
-   now marked *Deprecated* by Google in favour of `firebase_ai` (Firebase AI
-   Logic, same `responseSchema` / JSON-mode API, key stays server-side behind
-   Firebase). Default if no answer: keep `google_generative_ai` as specified.
+1. **Project location** — built inside the existing `~/Sites/ace_coach`
+   (package `ace_coach`, Android id `com.acecoach.ace_coach`, iOS bundle
+   `com.acecoach.aceCoach`) instead of a new `acecoach_app/` folder.
+2. **Gemini SDK** — `firebase_ai` (Firebase AI Logic) instead of the deprecated
+   `google_generative_ai`. Same structured-output API; the Gemini key stays
+   server-side behind the Firebase project, so `.env` only carries the model
+   name.
+3. **SQLite** — `sqlite3_flutter_libs` dropped (end of life); `drift_flutter`
+   brings `sqlite3` 3.x with the native library.
+4. **Lints** — `riverpod_lint` 3.1 is a native analyzer plugin declared under
+   the top-level `plugins:` key; `custom_lint` is no longer needed and is
+   incompatible with it, so it is not in the project.
+
+## 12. Files added beyond the prescribed tree
+
+| File | Why |
+|---|---|
+| `lib/firebase_options.dart` | Firebase options built from `.env` so no identifier is committed |
+| `lib/models/failures.dart` | sealed domain failures shared by services, repositories and UI |
+| `lib/providers/app_settings_provider.dart` | database instance, persisted theme mode and home city |
+| `lib/router/app_shell.dart` | bottom navigation shell for `StatefulShellRoute` |
+| `lib/screens/auth/splash_screen.dart` | design frame 01 |
+| `lib/screens/auth/auth_form_widgets.dart` | validators, labelled field, error banner, Google glyph shared by login and register |
+| `lib/widgets/app_logo.dart`, `goal_selector.dart`, `weather_alert_banner.dart`, `session_plan_header.dart`, `stat_tile.dart`, `home_city_dialog.dart` | components present in the design but absent from the prescribed widget list |
+| `test/helpers/fixtures.dart`, `test/flutter_test_config.dart`, `test/screenshots/` | shared test data, offline fonts in tests, on-demand screenshot goldens |
+| `assets/google_fonts/` | Poppins bundled (OFL) so the app and tests never fetch fonts |
+| `design/` | the imported Claude Design source, kept as the visual reference |

@@ -122,6 +122,7 @@ class SelectablePill extends StatelessWidget {
       child: SizedBox(
         height: AppSizes.minTapTarget,
         child: Center(
+          widthFactor: 1,
           child: Material(
             color: background,
             shape: StadiumBorder(
