@@ -263,7 +263,7 @@ class _SkeletonPlan extends StatelessWidget {
       ),
       itemCount: 4,
       separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm + 2),
-      itemBuilder: (_, index) => SkeletonCard(height: index == 0 ? 120 : 96),
+      itemBuilder: (_, index) => SkeletonCard(minHeight: index == 0 ? 120 : 96),
     );
   }
 }

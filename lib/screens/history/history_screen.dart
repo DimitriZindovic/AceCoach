@@ -204,7 +204,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                 itemCount: 5,
                 separatorBuilder: (_, _) =>
                     const SizedBox(height: AppSpacing.sm + 2),
-                itemBuilder: (_, _) => const SkeletonCard(height: 72),
+                itemBuilder: (_, _) => const SkeletonCard(minHeight: 72),
               ),
             },
           ),

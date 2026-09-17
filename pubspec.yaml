@@ -65,3 +65,5 @@ flutter:
   assets:
     - .env
     - assets/icons/
+    # Poppins bundled so google_fonts never needs the network (OFL licence).
+    - assets/google_fonts/

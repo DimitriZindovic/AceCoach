@@ -233,20 +233,18 @@ class _IndoorSwitch extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
-    return Container(
-      decoration: BoxDecoration(
-        color: scheme.surface,
+    return Material(
+      color: scheme.surface,
+      shape: RoundedRectangleBorder(
         borderRadius: AppRadius.circular(AppRadius.md),
-        border: Border.all(color: scheme.outline),
+        side: BorderSide(color: scheme.outline),
       ),
+      clipBehavior: Clip.antiAlias,
       child: SwitchListTile.adaptive(
         value: value,
         onChanged: onChanged,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.md + 2,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: AppRadius.circular(AppRadius.md),
         ),
         secondary: Icon(
           Icons.home_work_outlined,

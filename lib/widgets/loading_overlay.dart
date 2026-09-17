@@ -131,17 +131,17 @@ class _SkeletonBoxState extends State<SkeletonBox>
   }
 }
 
-/// Skeleton of an [ExerciseCard]-sized block.
+/// Skeleton of an [ExerciseCard]-sized block, at least [minHeight] tall.
 class SkeletonCard extends StatelessWidget {
-  const SkeletonCard({super.key, this.height = 96});
+  const SkeletonCard({super.key, this.minHeight = 96});
 
-  final double height;
+  final double minHeight;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Container(
-      height: height,
+      constraints: BoxConstraints(minHeight: minHeight),
       padding: const EdgeInsets.all(AppSpacing.md + 2),
       decoration: BoxDecoration(
         color: scheme.surface,
@@ -155,6 +155,7 @@ class SkeletonCard extends StatelessWidget {
           SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SkeletonBox(width: 160, height: 14),
