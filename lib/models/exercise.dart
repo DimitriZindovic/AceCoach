@@ -1,9 +1,3 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
-
-part 'exercise.freezed.dart';
-part 'exercise.g.dart';
-
-/// Position of an exercise inside the session.
 enum ExercisePhase {
   warmUp,
   main,
@@ -16,22 +10,38 @@ enum ExercisePhase {
   };
 }
 
-/// A single drill produced by the AI.
-@freezed
-abstract class Exercise with _$Exercise {
-  const Exercise._();
+class Exercise {
+  const Exercise({
+    required this.title,
+    required this.description,
+    required this.estimatedDurationMinutes,
+    required this.technicalTip,
+    this.phase = ExercisePhase.main,
+    this.indoorFriendly = true,
+  });
 
-  const factory Exercise({
-    required String title,
-    required String description,
-    required int estimatedDurationMinutes,
-    required String technicalTip,
-    @Default(ExercisePhase.main) ExercisePhase phase,
-    @Default(true) bool indoorFriendly,
-  }) = _Exercise;
+  final String title;
+  final String description;
+  final int estimatedDurationMinutes;
+  final String technicalTip;
+  final ExercisePhase phase;
+  final bool indoorFriendly;
 
-  factory Exercise.fromJson(Map<String, dynamic> json) =>
-      _$ExerciseFromJson(json);
+  factory Exercise.fromJson(Map<String, dynamic> json) => Exercise(
+    title: json['title'] as String,
+    description: json['description'] as String,
+    estimatedDurationMinutes: (json['minutes'] as num).toInt(),
+    technicalTip: json['tip'] as String,
+    phase: ExercisePhase.values.byName(json['phase'] as String),
+    indoorFriendly: json['indoorFriendly'] as bool,
+  );
 
-  bool get hasTip => technicalTip.trim().isNotEmpty;
+  Map<String, dynamic> toJson() => {
+    'title': title,
+    'description': description,
+    'minutes': estimatedDurationMinutes,
+    'tip': technicalTip,
+    'phase': phase.name,
+    'indoorFriendly': indoorFriendly,
+  };
 }

@@ -1,26 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../constants/app_colors.dart';
 import '../../constants/app_spacing.dart';
 import '../../constants/app_themes.dart';
 import '../../models/training_session.dart';
-import '../../providers/app_settings_provider.dart';
 import '../../providers/auth_provider.dart';
-import '../../providers/session_history_provider.dart';
+import '../../providers/session_provider.dart';
 import '../../providers/weather_provider.dart';
-import '../../router/app_router.dart';
-import '../../widgets/home_city_dialog.dart';
 import '../../widgets/loading_overlay.dart';
 import '../../widgets/session_card.dart';
 import '../../widgets/weather_chip.dart';
-import '../history/session_detail_screen.dart';
-import '../session_setup/session_setup_screen.dart';
 
-/// Greeting, today's weather, the "new session" call to action, recent
-/// sessions and quick stats.
+void _notHereYet(BuildContext context, String screen) {
+  ScaffoldMessenger.of(context)
+      .showSnackBar(SnackBar(content: Text('$screen is not built yet.')));
+}
+
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
@@ -28,19 +25,11 @@ class HomeScreen extends ConsumerWidget {
 
   Future<void> _refreshWeather(WidgetRef ref) async {
     ref.invalidate(currentWeatherProvider);
-    // The failure is rendered by the chip; the refresh gesture just ends.
     try {
       await ref.read(currentWeatherProvider.future);
     } on Object {
-      // Handled by the weather chip's error state.
+      return;
     }
-  }
-
-  Future<void> _enterCity(BuildContext context, WidgetRef ref) async {
-    final current = ref.read(homeCityProvider).value;
-    final city = await showHomeCityDialog(context, initial: current);
-    if (city == null) return;
-    await ref.read(homeCityProvider.notifier).setCity(city);
   }
 
   @override
@@ -48,7 +37,6 @@ class HomeScreen extends ConsumerWidget {
     final user = ref.watch(currentUserProvider);
     final weather = ref.watch(currentWeatherProvider);
     final history = ref.watch(sessionHistoryProvider);
-    final stats = ref.watch(profileStatsProvider);
     final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
 
@@ -111,14 +99,18 @@ class HomeScreen extends ConsumerWidget {
                           ),
                         ),
                         const SizedBox(width: AppSpacing.md),
-                        _Avatar(initials: user?.initials ?? '?'),
+                        _SignOutAvatar(
+                          initials: user?.initials ?? '?',
+                          onSignOut: () => ref
+                              .read(authControllerProvider.notifier)
+                              .signOut(),
+                        ),
                       ],
                     ),
                     const SizedBox(height: AppSpacing.lg),
                     WeatherChip(
                       weather: weather,
                       onRetry: () => _refreshWeather(ref),
-                      onEnterCity: () => _enterCity(context, ref),
                     ),
                   ],
                 ),
@@ -134,7 +126,7 @@ class HomeScreen extends ConsumerWidget {
               sliver: SliverList.list(
                 children: [
                   _NewSessionCard(
-                    onTap: () => context.go(SessionSetupScreen.routePath),
+                    onTap: () => _notHereYet(context, 'Session setup'),
                   ),
                   const SizedBox(height: AppSpacing.section),
                   Row(
@@ -144,7 +136,7 @@ class HomeScreen extends ConsumerWidget {
                     children: [
                       Text('Recent sessions', style: text.titleSmall),
                       TextButton(
-                        onPressed: () => context.goNamed(AppRoutes.history),
+                        onPressed: () => _notHereYet(context, 'History'),
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
                             horizontal: AppSpacing.sm,
@@ -157,13 +149,31 @@ class HomeScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   _RecentSessions(history: history),
-                  const SizedBox(height: AppSpacing.section),
-                  _StatsStrip(stats: stats),
                 ],
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _SignOutAvatar extends StatelessWidget {
+  const _SignOutAvatar({required this.initials, required this.onSignOut});
+
+  final String initials;
+  final VoidCallback onSignOut;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: 'Sign out',
+      child: InkWell(
+        onTap: onSignOut,
+        customBorder: const CircleBorder(),
+        child: _Avatar(initials: initials),
       ),
     );
   }
@@ -287,12 +297,7 @@ class _RecentSessions extends StatelessWidget {
           separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.md),
           itemBuilder: (context, index) => RecentSessionCard(
             session: value[index],
-            onTap: () => context.pushNamed(
-              AppRoutes.sessionDetail,
-              pathParameters: {
-                SessionDetailScreen.sessionIdParameter: value[index].id,
-              },
-            ),
+            onTap: () => _notHereYet(context, 'Session detail'),
           ),
         ),
         AsyncValue(:final value?) when value.isEmpty => const _RecentEmpty(),
@@ -352,80 +357,6 @@ class _RecentEmpty extends StatelessWidget {
             style: Theme.of(context).textTheme.caption,
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _StatsStrip extends StatelessWidget {
-  const _StatsStrip({required this.stats});
-
-  final ProfileStats stats;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.lg,
-        vertical: AppSpacing.md + 2,
-      ),
-      decoration: BoxDecoration(
-        color: scheme.surface,
-        borderRadius: AppRadius.circular(AppRadius.xl),
-        border: Border.all(color: scheme.outlineVariant),
-      ),
-      child: IntrinsicHeight(
-        child: Row(
-          children: [
-            _Stat(value: '${stats.savedCount}', label: 'Sessions'),
-            VerticalDivider(
-              width: AppSpacing.xl + AppSpacing.md,
-              color: scheme.outlineVariant,
-            ),
-            _Stat(value: stats.totalTimeLabel, label: 'On court'),
-            VerticalDivider(
-              width: AppSpacing.xl + AppSpacing.md,
-              color: scheme.outlineVariant,
-            ),
-            _Stat(value: stats.topStroke?.label ?? '—', label: 'Top stroke'),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _Stat extends StatelessWidget {
-  const _Stat({required this.value, required this.label});
-
-  final String value;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
-    return Expanded(
-      child: Semantics(
-        label: '$label: $value',
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
-              child: Text(value, maxLines: 1, style: text.titleLarge),
-            ),
-            Text(
-              label,
-              style: text.labelSmall?.copyWith(
-                fontWeight: FontWeight.w400,
-                letterSpacing: 0,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

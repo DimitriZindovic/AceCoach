@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../constants/app_colors.dart';
 import '../../constants/app_spacing.dart';
@@ -8,13 +7,9 @@ import '../../providers/auth_provider.dart';
 import '../../widgets/app_logo.dart';
 import '../../widgets/primary_button.dart';
 import 'auth_form_widgets.dart';
-import 'register_screen.dart';
 
-/// Email + password and Google sign-in, with a password-reset sheet.
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
-
-  static const String routePath = '/login';
 
   @override
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
@@ -36,7 +31,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _submit() async {
     FocusScope.of(context).unfocus();
     if (!(_formKey.currentState?.validate() ?? false)) return;
-    // Navigation happens through the router guard once the auth state emits.
     await ref
         .read(authControllerProvider.notifier)
         .signIn(
@@ -44,9 +38,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           password: _passwordController.text,
         );
   }
-
-  Future<void> _signInWithGoogle() =>
-      ref.read(authControllerProvider.notifier).signInWithGoogle();
 
   Future<void> _forgotPassword() async {
     final sent = await showModalBottomSheet<bool>(
@@ -83,8 +74,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 constraints: BoxConstraints(
                   minHeight: constraints.maxHeight - 36,
                 ),
-                // IntrinsicHeight lets the Spacer push the footer down while
-                // the content still scrolls on small screens.
                 child: IntrinsicHeight(
                   child: Form(
                     key: _formKey,
@@ -173,23 +162,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           label: 'Log in',
                           onPressed: _submit,
                           isLoading: isLoading,
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        PrimaryButton(
-                          label: 'Create account',
-                          variant: AppButtonVariant.outline,
-                          onPressed: isLoading
-                              ? null
-                              : () => context.push(RegisterScreen.routePath),
-                        ),
-                        const SizedBox(height: AppSpacing.lg),
-                        const OrDivider(),
-                        const SizedBox(height: AppSpacing.lg),
-                        PrimaryButton(
-                          label: 'Sign in with Google',
-                          variant: AppButtonVariant.neutral,
-                          leading: const GoogleGlyph(),
-                          onPressed: isLoading ? null : _signInWithGoogle,
                         ),
                         const Spacer(),
                         const SizedBox(height: AppSpacing.lg),

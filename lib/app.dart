@@ -2,25 +2,34 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'constants/app_themes.dart';
-import 'providers/app_settings_provider.dart';
-import 'router/app_router.dart';
+import 'providers/auth_provider.dart';
+import 'screens/auth/login_screen.dart';
+import 'screens/home/home_screen.dart';
 
-/// Root widget: router, light and dark themes, persisted theme mode.
-class AceCoachApp extends ConsumerWidget {
+class AceCoachApp extends StatelessWidget {
   const AceCoachApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final router = ref.watch(appRouterProvider);
-    final themeMode = ref.watch(appThemeModeProvider).value ?? ThemeMode.system;
-
-    return MaterialApp.router(
+  Widget build(BuildContext context) {
+    return MaterialApp(
       title: 'AceCoach',
       debugShowCheckedModeBanner: false,
       theme: AppThemes.light,
       darkTheme: AppThemes.dark,
-      themeMode: themeMode,
-      routerConfig: router,
+      home: const AuthGate(),
     );
+  }
+}
+
+class AuthGate extends ConsumerWidget {
+  const AuthGate({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return switch (ref.watch(authStateProvider)) {
+      AsyncData(value: _?) => const HomeScreen(),
+      AsyncData() || AsyncError() => const LoginScreen(),
+      _ => const Scaffold(body: Center(child: CircularProgressIndicator())),
+    };
   }
 }

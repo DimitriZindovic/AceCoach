@@ -4,11 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart' show AsyncValue;
 import '../constants/app_colors.dart';
 import '../constants/app_spacing.dart';
 import '../constants/app_themes.dart';
-import '../models/failures.dart';
+import '../models/app_exception.dart';
 import '../models/weather.dart';
 import 'loading_overlay.dart';
 
-/// Material icon for an OpenWeatherMap condition group.
 IconData weatherIcon(Weather weather) {
   final id = weather.conditionId;
   if (id < 300) return Icons.thunderstorm_outlined;
@@ -20,19 +19,15 @@ IconData weatherIcon(Weather weather) {
   return Icons.cloud_outlined;
 }
 
-/// The gradient weather card on the home screen, with explicit loading,
-/// error and data states.
 class WeatherChip extends StatelessWidget {
   const WeatherChip({
     super.key,
     required this.weather,
     this.onRetry,
-    this.onEnterCity,
   });
 
   final AsyncValue<Weather> weather;
   final VoidCallback? onRetry;
-  final VoidCallback? onEnterCity;
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +38,6 @@ class WeatherChip extends StatelessWidget {
         AsyncValue(:final error?) => _WeatherError(
           error: error,
           onRetry: onRetry,
-          onEnterCity: onEnterCity,
         ),
         _ => const SkeletonBox(
           key: ValueKey('weather-loading'),
@@ -150,19 +144,19 @@ class _VerdictBadge extends StatelessWidget {
 }
 
 class _WeatherError extends StatelessWidget {
-  const _WeatherError({required this.error, this.onRetry, this.onEnterCity});
+  const _WeatherError({required this.error, this.onRetry});
 
   final Object error;
   final VoidCallback? onRetry;
-  final VoidCallback? onEnterCity;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
-    final failure = error is WeatherFailure ? error as WeatherFailure : null;
-    final message = failure?.message ?? 'Weather unavailable right now.';
-    final showCity = onEnterCity != null && (failure?.needsCity ?? false);
+    final failure = error;
+    final message = failure is AppException
+        ? failure.message
+        : 'Weather unavailable right now.';
 
     return Container(
       key: const ValueKey('weather-error'),
@@ -198,9 +192,7 @@ class _WeatherError extends StatelessWidget {
               ],
             ),
           ),
-          if (showCity)
-            TextButton(onPressed: onEnterCity, child: const Text('Enter city'))
-          else if (onRetry != null)
+          if (onRetry != null)
             IconButton(
               onPressed: onRetry,
               tooltip: 'Retry weather',

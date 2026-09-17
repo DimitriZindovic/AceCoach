@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
 
-/// Spacing rhythm measured on the 360 dp mockup frames.
 abstract final class AppSpacing {
   static const double xxs = 4;
   static const double xs = 6;
@@ -11,19 +10,13 @@ abstract final class AppSpacing {
   static const double lg = 16;
   static const double xl = 20;
   static const double xxl = 24;
-
-  /// Horizontal screen padding used by every screen in the design.
   static const double screenHorizontal = 22;
-
-  /// Vertical gap between two sections of a screen.
   static const double section = 18;
-
   static const EdgeInsets screenPadding = EdgeInsets.symmetric(
     horizontal: screenHorizontal,
   );
 }
 
-/// Corner radii, from the smallest badge to the phone frame.
 abstract final class AppRadius {
   static const double xs = 8;
   static const double sm = 10;
@@ -36,7 +29,6 @@ abstract final class AppRadius {
   static BorderRadius circular(double radius) => BorderRadius.circular(radius);
 }
 
-/// Fixed component sizes from the design.
 abstract final class AppSizes {
   static const double buttonHeight = 50;
   static const double ctaButtonHeight = 54;
@@ -50,7 +42,6 @@ abstract final class AppSizes {
   static const double minTapTarget = 48;
 }
 
-/// Elevation expressed as the box shadows drawn in the design.
 abstract final class AppShadows {
   static List<BoxShadow> card = [
     BoxShadow(
@@ -93,7 +84,6 @@ abstract final class AppShadows {
   ];
 }
 
-/// Motion tokens: restrained, quick transitions.
 abstract final class AppDurations {
   static const Duration fast = Duration(milliseconds: 150);
   static const Duration normal = Duration(milliseconds: 250);

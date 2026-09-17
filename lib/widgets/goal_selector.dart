@@ -4,7 +4,6 @@ import '../constants/app_colors.dart';
 import '../constants/app_spacing.dart';
 import '../models/session_params.dart';
 
-/// Icon associated with each tactical goal, shared by the selector and cards.
 IconData goalIcon(TacticalGoal goal) => switch (goal) {
   TacticalGoal.baselinePlay => Icons.bar_chart_rounded,
   TacticalGoal.netPlay => Icons.sports_tennis_rounded,
@@ -12,7 +11,6 @@ IconData goalIcon(TacticalGoal goal) => switch (goal) {
   TacticalGoal.mental => Icons.psychology_outlined,
 };
 
-/// Two-by-two grid of goal cards; the selected one is filled with ink.
 class GoalSelector extends StatelessWidget {
   const GoalSelector({super.key, required this.value, required this.onChanged});
 

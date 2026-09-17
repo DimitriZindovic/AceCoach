@@ -4,10 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 import 'app_spacing.dart';
 
-/// Light and dark [ThemeData] built from the design tokens.
-///
-/// Both themes share the Poppins type scale and the component shapes; only the
-/// colour scheme changes.
 abstract final class AppThemes {
   static ThemeData get light => _build(_lightScheme, Brightness.light);
 
@@ -260,7 +256,6 @@ abstract final class AppThemes {
     );
   }
 
-  /// Poppins scale measured on the mockups (sizes in dp at 1:3 of 1080 px).
   static TextTheme _textTheme(Color onSurface, Color onSurfaceVariant) {
     final base = GoogleFonts.poppinsTextTheme();
     TextStyle style(
@@ -280,29 +275,22 @@ abstract final class AppThemes {
     }
 
     return base.copyWith(
-      // 40 · splash wordmark
       displaySmall: style(40, FontWeight.w700, letterSpacing: -1.2),
-      // 26 · auth screen title
       headlineMedium: style(
         26,
         FontWeight.w700,
         letterSpacing: -0.5,
         height: 1.2,
       ),
-      // 22 · screen headline / greeting
       headlineSmall: style(
         22,
         FontWeight.w700,
         letterSpacing: -0.4,
         height: 1.25,
       ),
-      // 20 · section title / stat value
       titleLarge: style(20, FontWeight.w700, letterSpacing: -0.4),
-      // 17 · app bar title
       titleMedium: style(17, FontWeight.w600),
-      // 15 · card heading
       titleSmall: style(15, FontWeight.w600),
-      // 16 / 14 / 13 · body
       bodyLarge: style(16, FontWeight.w400, height: 1.45),
       bodyMedium: style(14, FontWeight.w400, height: 1.45),
       bodySmall: style(
@@ -311,7 +299,6 @@ abstract final class AppThemes {
         height: 1.4,
         color: onSurfaceVariant,
       ),
-      // 15 · button, 12 · chip / caption, 11 · micro label
       labelLarge: style(15, FontWeight.w600),
       labelMedium: style(12, FontWeight.w600),
       labelSmall: style(11, FontWeight.w600, letterSpacing: 0.2),
@@ -319,7 +306,6 @@ abstract final class AppThemes {
   }
 }
 
-/// The slider thumb from the design: a white disc with a 3 dp primary ring.
 class _OutlinedThumbShape extends SliderComponentShape {
   const _OutlinedThumbShape();
 
@@ -367,21 +353,15 @@ class _OutlinedThumbShape extends SliderComponentShape {
   }
 }
 
-/// Text styles from the mockups that do not map to a Material slot.
 extension AppTextStyles on TextTheme {
-  /// 13 / 600 · section heading inside a screen ("Duration", "Level").
   TextStyle get sectionLabel => labelLarge!.copyWith(fontSize: 13);
 
-  /// 11 / 600 · label above a text field.
   TextStyle get fieldLabel =>
       labelSmall!.copyWith(color: AppColors.textSecondary, letterSpacing: 0.44);
 
-  /// 12 / 400 · secondary caption under a title.
   TextStyle get caption => bodySmall!.copyWith(fontSize: 12);
 
-  /// 10 / 600 · badge and micro label.
   TextStyle get badge => labelSmall!.copyWith(fontSize: 10, letterSpacing: 0);
 
-  /// 11 / 600 · uppercase eyebrow ("AI GENERATED").
   TextStyle get eyebrow => labelSmall!.copyWith(letterSpacing: 1.1);
 }

@@ -1,28 +1,24 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
+class AppUser {
+  const AppUser({
+    required this.uid,
+    required this.email,
+    this.displayName,
+    this.photoUrl,
+    this.createdAt,
+  });
 
-part 'app_user.freezed.dart';
+  final String uid;
+  final String email;
+  final String? displayName;
+  final String? photoUrl;
+  final DateTime? createdAt;
 
-/// The signed-in user, decoupled from the Firebase `User` type.
-@freezed
-abstract class AppUser with _$AppUser {
-  const AppUser._();
-
-  const factory AppUser({
-    required String uid,
-    required String email,
-    String? displayName,
-    String? photoUrl,
-    DateTime? createdAt,
-  }) = _AppUser;
-
-  /// First name, falling back to the email local part.
   String get firstName {
     final name = displayName?.trim();
     if (name != null && name.isNotEmpty) return name.split(' ').first;
     return email.split('@').first;
   }
 
-  /// Up to two initials for the avatar badge, e.g. "MD".
   String get initials {
     final name = displayName?.trim();
     if (name == null || name.isEmpty) {

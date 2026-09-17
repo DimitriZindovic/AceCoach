@@ -1,11 +1,8 @@
 import 'package:dio/dio.dart';
 
 import '../constants/api_constants.dart';
-import '../models/failures.dart';
+import '../models/app_exception.dart';
 
-/// Raw HTTP client for the OpenWeatherMap "current weather" endpoint.
-///
-/// Returns the decoded JSON payload; the repository builds the model.
 class WeatherApiService {
   WeatherApiService(this._dio, {required this._apiKey});
 
@@ -19,10 +16,6 @@ class WeatherApiService {
     return _get({'lat': latitude, 'lon': longitude});
   }
 
-  Future<Map<String, dynamic>> fetchByCity(String city) {
-    return _get({'q': city});
-  }
-
   Future<Map<String, dynamic>> _get(Map<String, Object> query) async {
     try {
       final response = await _dio.get<Map<String, dynamic>>(
@@ -34,10 +27,12 @@ class WeatherApiService {
         },
       );
       final data = response.data;
-      if (data == null) throw const WeatherFailure.malformedResponse();
+      if (data == null) {
+        throw const AppException('Weather data could not be read.');
+      }
       return data;
     } on DioException catch (error) {
-      throw _mapDioError(error, query['q'] as String?);
+      throw _mapDioError(error);
     }
   }
 
@@ -48,17 +43,16 @@ class WeatherApiService {
     DioExceptionType.connectionError,
   };
 
-  WeatherFailure _mapDioError(DioException error, String? city) {
+  AppException _mapDioError(DioException error) {
     if (_networkErrors.contains(error.type)) {
-      return WeatherFailure.network(error);
+      return const AppException('Weather unavailable offline.');
     }
     if (error.type == DioExceptionType.badResponse) {
       final status = error.response?.statusCode;
-      if (status == 401) return const WeatherFailure.unauthorized();
-      if (status == 404 && city != null) {
-        return WeatherFailure.cityNotFound(city);
+      if (status == 401) {
+        return const AppException('Weather service rejected the API key.');
       }
     }
-    return WeatherFailure.unknown(error);
+    return const AppException('Weather unavailable right now.');
   }
 }

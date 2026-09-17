@@ -1,40 +1,19 @@
-import 'dart:async';
-
 import 'package:geolocator/geolocator.dart';
 
 import '../constants/api_constants.dart';
+import '../models/app_exception.dart';
 
-/// Why the device position could not be read.
-enum LocationErrorKind { serviceDisabled, permissionDenied, timeout, unknown }
-
-/// Raised by [LocationService] instead of the many geolocator exceptions.
-class LocationException implements Exception {
-  const LocationException(this.kind, [this.cause]);
-
-  final LocationErrorKind kind;
-  final Object? cause;
-
-  bool get isPermissionProblem =>
-      kind == LocationErrorKind.permissionDenied ||
-      kind == LocationErrorKind.serviceDisabled;
-
-  @override
-  String toString() => 'LocationException($kind)';
-}
-
-/// Reads the device coordinates for the weather lookup.
 class LocationService {
   const LocationService();
 
-  /// Low accuracy is plenty for a city-level weather request and is faster.
   static const LocationSettings _settings = LocationSettings(
     accuracy: LocationAccuracy.low,
     timeLimit: ApiConstants.locationTimeout,
   );
 
-  Future<Position> getCurrentPosition() async {
+  Future<({double latitude, double longitude})> getCurrentPosition() async {
     if (!await Geolocator.isLocationServiceEnabled()) {
-      throw const LocationException(LocationErrorKind.serviceDisabled);
+      throw const AppException('Location is turned off on this device.');
     }
 
     var permission = await Geolocator.checkPermission();
@@ -43,22 +22,17 @@ class LocationService {
     }
     if (permission == LocationPermission.denied ||
         permission == LocationPermission.deniedForever) {
-      throw const LocationException(LocationErrorKind.permissionDenied);
+      throw const AppException('Location access was denied.');
     }
 
     try {
-      // A recent cached fix avoids waking the GPS chip at all.
       final lastKnown = await Geolocator.getLastKnownPosition();
-      if (lastKnown != null && _isFresh(lastKnown)) return lastKnown;
-      return await Geolocator.getCurrentPosition(locationSettings: _settings);
-    } on TimeoutException catch (error) {
-      throw LocationException(LocationErrorKind.timeout, error);
-    } on LocationServiceDisabledException catch (error) {
-      throw LocationException(LocationErrorKind.serviceDisabled, error);
-    } on PermissionDeniedException catch (error) {
-      throw LocationException(LocationErrorKind.permissionDenied, error);
-    } catch (error) {
-      throw LocationException(LocationErrorKind.unknown, error);
+      final position = lastKnown != null && _isFresh(lastKnown)
+          ? lastKnown
+          : await Geolocator.getCurrentPosition(locationSettings: _settings);
+      return (latitude: position.latitude, longitude: position.longitude);
+    } catch (_) {
+      throw const AppException('Could not read your location.');
     }
   }
 

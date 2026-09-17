@@ -47,3 +47,10 @@ kotlin {
 flutter {
     source = "../.."
 }
+
+// Firebase reads android/app/google-services.json through this plugin. It is
+// applied only when the file is present, so the project still builds on a
+// clone that has no Firebase project of its own.
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+}

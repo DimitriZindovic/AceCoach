@@ -3,10 +3,6 @@ import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_spacing.dart';
 
-/// Dims [child] and shows a progress card while [isLoading] is true.
-///
-/// The content underneath stays laid out, so a regeneration keeps the previous
-/// plan visible instead of collapsing to a spinner.
 class LoadingOverlay extends StatelessWidget {
   const LoadingOverlay({
     super.key,
@@ -80,7 +76,6 @@ class LoadingOverlay extends StatelessWidget {
   }
 }
 
-/// A softly pulsing placeholder block for skeleton states.
 class SkeletonBox extends StatefulWidget {
   const SkeletonBox({
     super.key,
@@ -131,7 +126,6 @@ class _SkeletonBoxState extends State<SkeletonBox>
   }
 }
 
-/// Skeleton of an [ExerciseCard]-sized block, at least [minHeight] tall.
 class SkeletonCard extends StatelessWidget {
   const SkeletonCard({super.key, this.minHeight = 96});
 

@@ -5,8 +5,6 @@ import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_spacing.dart';
 
-/// The racket-and-ball mark from the design, drawn with a [CustomPainter] so
-/// it scales crisply at any size.
 class AppLogo extends StatelessWidget {
   const AppLogo({
     super.key,
@@ -37,7 +35,6 @@ class AppLogo extends StatelessWidget {
   }
 }
 
-/// The logo inside a soft rounded square, as on the login screen.
 class AppLogoBadge extends StatelessWidget {
   const AppLogoBadge({super.key, this.size = 48});
 
@@ -71,7 +68,6 @@ class _LogoPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // The design is drawn on a 64 × 64 grid.
     final scale = size.width / 64;
     canvas.scale(scale);
 
@@ -81,7 +77,6 @@ class _LogoPainter extends CustomPainter {
       ..strokeWidth = 3
       ..strokeCap = StrokeCap.round;
 
-    // Racket head, rotated -28°.
     canvas
       ..save()
       ..translate(24, 22)
@@ -92,12 +87,10 @@ class _LogoPainter extends CustomPainter {
       )
       ..restore();
 
-    // Handle and grip end.
     canvas
       ..drawLine(const Offset(14, 34), const Offset(8, 52), stroke)
       ..drawLine(const Offset(6, 56), const Offset(11, 50), stroke);
 
-    // Ball with two seams.
     canvas.drawCircle(const Offset(47, 45), 10, Paint()..color = ballColor);
     final seam = Paint()
       ..color = seamColor

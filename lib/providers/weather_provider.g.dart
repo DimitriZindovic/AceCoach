@@ -94,7 +94,7 @@ final class WeatherApiServiceProvider
   }
 }
 
-String _$weatherApiServiceHash() => r'366c356ed2537ac7a09fedf06dbe6b3936294b98';
+String _$weatherApiServiceHash() => r'12f4c77610fa0d9913337ae0ed453f661006e439';
 
 @ProviderFor(locationService)
 final locationServiceProvider = LocationServiceProvider._();
@@ -185,26 +185,12 @@ final class WeatherRepositoryProvider
 
 String _$weatherRepositoryHash() => r'7f2053770c668654ca1f4b0d7002b2d9426614ed';
 
-/// Today's weather. Cached for [ApiConstants.weatherCacheDuration], then
-/// refreshed on the next read. Re-fetched when the home city changes.
-///
-/// Errors are [WeatherFailure]s; consumers must treat them as non-blocking.
-
 @ProviderFor(currentWeather)
 final currentWeatherProvider = CurrentWeatherProvider._();
-
-/// Today's weather. Cached for [ApiConstants.weatherCacheDuration], then
-/// refreshed on the next read. Re-fetched when the home city changes.
-///
-/// Errors are [WeatherFailure]s; consumers must treat them as non-blocking.
 
 final class CurrentWeatherProvider
     extends $FunctionalProvider<AsyncValue<Weather>, Weather, FutureOr<Weather>>
     with $FutureModifier<Weather>, $FutureProvider<Weather> {
-  /// Today's weather. Cached for [ApiConstants.weatherCacheDuration], then
-  /// refreshed on the next read. Re-fetched when the home city changes.
-  ///
-  /// Errors are [WeatherFailure]s; consumers must treat them as non-blocking.
   CurrentWeatherProvider._()
     : super(
         from: null,
@@ -230,4 +216,4 @@ final class CurrentWeatherProvider
   }
 }
 
-String _$currentWeatherHash() => r'96b8dea6e7ec125af3f2e5ebe110db33624cc66e';
+String _$currentWeatherHash() => r'e60cc5ed711cd7a38e76da4cc0b3a05fc47f8189';

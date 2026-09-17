@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../constants/api_constants.dart';
@@ -9,7 +8,6 @@ import '../models/weather.dart';
 import '../repositories/weather_repository.dart';
 import '../services/location_service.dart';
 import '../services/weather_api_service.dart';
-import 'app_settings_provider.dart';
 
 part 'weather_provider.g.dart';
 
@@ -30,7 +28,7 @@ Dio dio(Ref ref) {
 WeatherApiService weatherApiService(Ref ref) {
   return WeatherApiService(
     ref.watch(dioProvider),
-    apiKey: dotenv.maybeGet(ApiConstants.envOpenWeatherApiKey) ?? '',
+    apiKey: ApiConstants.openWeatherApiKey,
   );
 }
 
@@ -45,16 +43,9 @@ WeatherRepository weatherRepository(Ref ref) {
   );
 }
 
-/// Today's weather. Cached for [ApiConstants.weatherCacheDuration], then
-/// refreshed on the next read. Re-fetched when the home city changes.
-///
-/// Errors are [WeatherFailure]s; consumers must treat them as non-blocking.
 @Riverpod(keepAlive: true)
 Future<Weather> currentWeather(Ref ref) async {
-  final city = await ref.watch(homeCityProvider.future);
-  final weather = await ref
-      .watch(weatherRepositoryProvider)
-      .getCurrentWeather(fallbackCity: city);
+  final weather = await ref.watch(weatherRepositoryProvider).getCurrentWeather();
 
   final timer = Timer(ApiConstants.weatherCacheDuration, ref.invalidateSelf);
   ref.onDispose(timer.cancel);

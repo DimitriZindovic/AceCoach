@@ -7,7 +7,6 @@ import '../constants/app_themes.dart';
 import '../models/training_session.dart';
 import 'goal_selector.dart';
 
-/// "Today", "Yesterday" or "13 Sep".
 String relativeDayLabel(DateTime date, {DateTime? now}) {
   final today = DateUtils.dateOnly(now ?? DateTime.now());
   final day = DateUtils.dateOnly(date);
@@ -17,7 +16,6 @@ String relativeDayLabel(DateTime date, {DateTime? now}) {
   return DateFormat('d MMM').format(date);
 }
 
-/// History row: goal icon, title, meta line and a status badge.
 class SessionCard extends StatelessWidget {
   const SessionCard({super.key, required this.session, this.onTap});
 
@@ -103,7 +101,6 @@ class SessionCard extends StatelessWidget {
   }
 }
 
-/// Compact card used in the "Recent sessions" carousel on the home screen.
 class RecentSessionCard extends StatelessWidget {
   const RecentSessionCard({super.key, required this.session, this.onTap});
 

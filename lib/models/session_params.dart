@@ -1,9 +1,3 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
-
-part 'session_params.freezed.dart';
-part 'session_params.g.dart';
-
-/// Player level, drives the intensity and the vocabulary of the plan.
 enum SkillLevel {
   beginner,
   intermediate,
@@ -16,7 +10,6 @@ enum SkillLevel {
   };
 }
 
-/// Strokes the player wants to work on. Multi-select.
 enum Stroke {
   forehand,
   backhand,
@@ -33,7 +26,6 @@ enum Stroke {
   };
 }
 
-/// Tactical theme of the session.
 enum TacticalGoal {
   baselinePlay,
   netPlay,
@@ -48,7 +40,6 @@ enum TacticalGoal {
   };
 }
 
-/// Who is on court, which changes the kind of drills that are possible.
 enum PlayerCount {
   alone,
   withPartner,
@@ -61,51 +52,46 @@ enum PlayerCount {
   };
 }
 
-/// Everything the user chooses before a session is generated.
-@freezed
-abstract class SessionParams with _$SessionParams {
-  const SessionParams._();
+class SessionParams {
+  const SessionParams({
+    this.durationMinutes = 60,
+    this.level = SkillLevel.intermediate,
+    this.strokes = const <Stroke>{},
+    this.goal = TacticalGoal.baselinePlay,
+    this.players = PlayerCount.withPartner,
+    this.preferIndoor = false,
+  });
 
-  const factory SessionParams({
-    @Default(SessionParams.defaultDuration) int durationMinutes,
-    @Default(SkillLevel.intermediate) SkillLevel level,
-    @Default(<Stroke>{}) Set<Stroke> strokes,
-    @Default(TacticalGoal.baselinePlay) TacticalGoal goal,
-    @Default(PlayerCount.withPartner) PlayerCount players,
-    @Default(false) bool preferIndoor,
-  }) = _SessionParams;
+  final int durationMinutes;
+  final SkillLevel level;
+  final Set<Stroke> strokes;
+  final TacticalGoal goal;
+  final PlayerCount players;
+  final bool preferIndoor;
 
-  factory SessionParams.fromJson(Map<String, dynamic> json) =>
-      _$SessionParamsFromJson(json);
+  factory SessionParams.fromJson(Map<String, dynamic> json) => SessionParams(
+    durationMinutes: (json['duration'] as num).toInt(),
+    level: SkillLevel.values.byName(json['level'] as String),
+    strokes: {
+      for (final name in json['strokes'] as List)
+        Stroke.values.byName(name as String),
+    },
+    goal: TacticalGoal.values.byName(json['goal'] as String),
+    players: PlayerCount.values.byName(json['players'] as String),
+    preferIndoor: json['preferIndoor'] as bool,
+  );
 
-  static const int minDuration = 30;
-  static const int maxDuration = 120;
-  static const int durationStep = 15;
-  static const int defaultDuration = 60;
+  Map<String, dynamic> toJson() => {
+    'duration': durationMinutes,
+    'level': level.name,
+    'strokes': [for (final s in orderedStrokes) s.name],
+    'goal': goal.name,
+    'players': players.name,
+    'preferIndoor': preferIndoor,
+  };
 
-  /// Number of slider divisions between [minDuration] and [maxDuration].
-  static int get durationDivisions =>
-      (maxDuration - minDuration) ~/ durationStep;
-
-  /// Generation is only allowed once at least one stroke is selected.
-  bool get isValid => strokes.isNotEmpty && isDurationValid(durationMinutes);
-
-  /// Strokes in enum order, for stable display and prompts.
   List<Stroke> get orderedStrokes =>
       Stroke.values.where(strokes.contains).toList();
 
   String get strokesLabel => orderedStrokes.map((s) => s.label).join(', ');
-
-  /// A duration is valid when it sits on the 15-minute grid inside the range.
-  static bool isDurationValid(int minutes) =>
-      minutes >= minDuration &&
-      minutes <= maxDuration &&
-      (minutes - minDuration) % durationStep == 0;
-
-  /// Snaps any value to the closest valid duration.
-  static int snapDuration(num minutes) {
-    final steps = ((minutes - minDuration) / durationStep).round();
-    final snapped = minDuration + steps * durationStep;
-    return snapped.clamp(minDuration, maxDuration);
-  }
 }

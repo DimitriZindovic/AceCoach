@@ -49,8 +49,6 @@ app.*.map.json
 
 # Secrets and per-developer configuration
 .env
-**/google-services.json
-**/GoogleService-Info.plist
 
 # Generated code is rebuilt with build_runner
 # (kept in git so the project compiles after clone; uncomment to ignore)

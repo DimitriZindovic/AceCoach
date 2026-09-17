@@ -4,8 +4,6 @@ import '../constants/app_colors.dart';
 import '../constants/app_spacing.dart';
 import 'primary_button.dart';
 
-/// Centred empty / error state with an icon, a title, a message and an
-/// optional action.
 class EmptyState extends StatelessWidget {
   const EmptyState({
     super.key,
@@ -23,7 +21,6 @@ class EmptyState extends StatelessWidget {
   final String? actionLabel;
   final VoidCallback? onAction;
 
-  /// Uses the error tint for the icon box.
   final bool isError;
 
   @override

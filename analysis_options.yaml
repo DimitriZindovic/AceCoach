@@ -13,9 +13,6 @@ analyzer:
     - ios/**
     - "**/*.g.dart"
     - "**/*.freezed.dart"
-  errors:
-    # freezed + json_serializable annotate constructor parameters on purpose.
-    invalid_annotation_target: ignore
 
 linter:
   rules:

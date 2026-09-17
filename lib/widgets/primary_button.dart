@@ -3,22 +3,8 @@ import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_spacing.dart';
 
-/// Visual variants of the app button, all 50 dp tall with a 16 dp radius.
-enum AppButtonVariant {
-  /// Green fill with the soft green glow (main call to action).
-  primary,
+enum AppButtonVariant { primary, outline, neutral, destructive }
 
-  /// White fill, 1.5 dp green border, dark green label.
-  outline,
-
-  /// White fill, neutral border, ink label ("Regenerate", Google sign-in).
-  neutral,
-
-  /// White fill, light red border, red label ("Log out").
-  destructive,
-}
-
-/// Full-width button following the design's button anatomy.
 class PrimaryButton extends StatelessWidget {
   const PrimaryButton({
     super.key,
@@ -36,13 +22,11 @@ class PrimaryButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final IconData? icon;
 
-  /// Custom leading widget (e.g. the Google glyph). Wins over [icon].
   final Widget? leading;
   final bool isLoading;
   final AppButtonVariant variant;
   final double height;
 
-  /// 14 dp label and 17 dp icon, for two buttons side by side.
   final bool dense;
 
   bool get _enabled => onPressed != null && !isLoading;
