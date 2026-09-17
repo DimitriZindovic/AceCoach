@@ -76,8 +76,7 @@ class SessionGeneration extends _$SessionGeneration {
   Future<void> generate() => _generate(previousTitle: null);
 
   /// Produces a different proposal for the same parameters.
-  Future<void> regenerate() =>
-      _generate(previousTitle: state.session?.title);
+  Future<void> regenerate() => _generate(previousTitle: state.session?.title);
 
   /// Re-runs generation constrained to indoor-friendly drills.
   Future<void> adjustForIndoor() {

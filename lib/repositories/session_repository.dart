@@ -9,9 +9,13 @@ import '../services/local_database_service.dart';
 
 /// Orchestrates AI generation (remote) and the saved history (local).
 class SessionRepository {
-  SessionRepository(this._ai, this._database, {Uuid? uuid, DateTime Function()? now})
-    : _uuid = uuid ?? const Uuid(),
-      _now = now ?? DateTime.now;
+  SessionRepository(
+    this._ai,
+    this._database, {
+    Uuid? uuid,
+    DateTime Function()? now,
+  }) : _uuid = uuid ?? const Uuid(),
+       _now = now ?? DateTime.now;
 
   final AiService _ai;
   final LocalDatabaseService _database;
@@ -60,7 +64,8 @@ class SessionRepository {
     );
   }
 
-  Future<void> save(TrainingSession session) => _database.insertSession(session);
+  Future<void> save(TrainingSession session) =>
+      _database.insertSession(session);
 
   Stream<List<TrainingSession>> watchHistory(String userId) =>
       _database.watchSessions(userId);

@@ -67,7 +67,8 @@ abstract class Weather with _$Weather {
 
     return Weather(
       temperatureCelsius: temp.toDouble(),
-      feelsLikeCelsius: (main['feels_like'] as num?)?.toDouble() ?? temp.toDouble(),
+      feelsLikeCelsius:
+          (main['feels_like'] as num?)?.toDouble() ?? temp.toDouble(),
       humidityPercent: (main['humidity'] as num?)?.toInt() ?? 0,
       windSpeedMs: wind is Map<String, dynamic>
           ? (wind['speed'] as num?)?.toDouble() ?? 0
@@ -94,7 +95,8 @@ abstract class Weather with _$Weather {
 
   bool get isTooCold => temperatureCelsius <= 3;
 
-  bool get isOutdoorFriendly => !isRainy && !isTooWindy && !isTooHot && !isTooCold;
+  bool get isOutdoorFriendly =>
+      !isRainy && !isTooWindy && !isTooHot && !isTooCold;
 
   WeatherVerdict get verdict {
     if (isRainy || isStormy) return WeatherVerdict.indoor;

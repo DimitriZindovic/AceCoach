@@ -13,8 +13,9 @@ class AuthRepository {
 
   final AuthService _service;
 
-  Stream<AppUser?> watchUser() =>
-      _service.userChanges().map((user) => user == null ? null : _toAppUser(user));
+  Stream<AppUser?> watchUser() => _service.userChanges().map(
+    (user) => user == null ? null : _toAppUser(user),
+  );
 
   AppUser? get currentUser {
     final user = _service.currentUser;

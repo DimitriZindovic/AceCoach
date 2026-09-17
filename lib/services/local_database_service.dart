@@ -45,7 +45,8 @@ class Exercises extends Table {
   IntColumn get estimatedMinutes => integer()();
   TextColumn get technicalTip => text()();
   TextColumn get phase => textEnum<ExercisePhase>()();
-  BoolColumn get indoorFriendly => boolean().withDefault(const Constant(true))();
+  BoolColumn get indoorFriendly =>
+      boolean().withDefault(const Constant(true))();
 
   @override
   Set<Column> get primaryKey => {sessionId, position};
@@ -142,9 +143,9 @@ class LocalDatabaseService extends _$LocalDatabaseService {
       await (delete(appSettings)..where((s) => s.key.equals(key))).go();
       return;
     }
-    await into(
-      appSettings,
-    ).insertOnConflictUpdate(AppSettingsCompanion.insert(key: key, value: value));
+    await into(appSettings).insertOnConflictUpdate(
+      AppSettingsCompanion.insert(key: key, value: value),
+    );
   }
 
   // ------------------------------------------------------------ mapping
@@ -214,14 +215,20 @@ class LocalDatabaseService extends _$LocalDatabaseService {
       exercises: drills,
       weather: row.weatherJson == null
           ? null
-          : Weather.fromJson(jsonDecode(row.weatherJson!) as Map<String, dynamic>),
+          : Weather.fromJson(
+              jsonDecode(row.weatherJson!) as Map<String, dynamic>,
+            ),
       weatherUsed: row.weatherUsed,
       weatherAdvice: row.weatherAdvice,
       completedAt: row.completedAt,
     );
   }
 
-  ExercisesCompanion _toExerciseRow(String sessionId, int position, Exercise e) {
+  ExercisesCompanion _toExerciseRow(
+    String sessionId,
+    int position,
+    Exercise e,
+  ) {
     return ExercisesCompanion.insert(
       sessionId: sessionId,
       position: position,

@@ -62,9 +62,7 @@ class HistoryFilter {
       if (needle.isEmpty) return true;
       return session.title.toLowerCase().contains(needle) ||
           session.summary.toLowerCase().contains(needle) ||
-          session.exercises.any(
-            (e) => e.title.toLowerCase().contains(needle),
-          );
+          session.exercises.any((e) => e.title.toLowerCase().contains(needle));
     }).toList();
   }
 }
@@ -187,9 +185,8 @@ class HistoryActions extends _$HistoryActions {
   @override
   AsyncValue<void> build() => const AsyncData(null);
 
-  Future<void> delete(String id) => _run(
-    () => ref.read(sessionRepositoryProvider).delete(id),
-  );
+  Future<void> delete(String id) =>
+      _run(() => ref.read(sessionRepositoryProvider).delete(id));
 
   Future<void> setCompleted(String id, {required bool completed}) => _run(
     () => ref

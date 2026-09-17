@@ -66,10 +66,15 @@ enum WeatherFailureKind {
 
 /// Failure raised while fetching the weather. Never blocks generation.
 class WeatherFailure extends AppFailure {
-  const WeatherFailure(this.kind, String message, {this.cause}) : super(message);
+  const WeatherFailure(this.kind, String message, {this.cause})
+    : super(message);
 
   const WeatherFailure.network([Object? cause])
-    : this(WeatherFailureKind.network, 'Weather unavailable offline.', cause: cause);
+    : this(
+        WeatherFailureKind.network,
+        'Weather unavailable offline.',
+        cause: cause,
+      );
 
   const WeatherFailure.locationDenied()
     : this(
@@ -101,7 +106,11 @@ class WeatherFailure extends AppFailure {
       );
 
   const WeatherFailure.unknown([Object? cause])
-    : this(WeatherFailureKind.unknown, 'Weather unavailable right now.', cause: cause);
+    : this(
+        WeatherFailureKind.unknown,
+        'Weather unavailable right now.',
+        cause: cause,
+      );
 
   final WeatherFailureKind kind;
   final Object? cause;
@@ -139,11 +148,12 @@ class AuthFailure extends AppFailure {
       AuthFailureKind.userNotFound,
       'No account matches this email.',
     ),
-    'wrong-password' || 'invalid-credential' || 'INVALID_LOGIN_CREDENTIALS' =>
-      const AuthFailure(
-        AuthFailureKind.wrongPassword,
-        'Incorrect email or password.',
-      ),
+    'wrong-password' ||
+    'invalid-credential' ||
+    'INVALID_LOGIN_CREDENTIALS' => const AuthFailure(
+      AuthFailureKind.wrongPassword,
+      'Incorrect email or password.',
+    ),
     'email-already-in-use' => const AuthFailure(
       AuthFailureKind.emailAlreadyInUse,
       'An account already exists with this email.',
@@ -165,7 +175,10 @@ class AuthFailure extends AppFailure {
   };
 
   const AuthFailure.network()
-    : this(AuthFailureKind.network, 'No connection. Check your network and retry.');
+    : this(
+        AuthFailureKind.network,
+        'No connection. Check your network and retry.',
+      );
 
   const AuthFailure.cancelled()
     : this(AuthFailureKind.cancelled, 'Sign-in was cancelled.');

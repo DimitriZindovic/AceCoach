@@ -148,7 +148,9 @@ abstract final class AppThemes {
           horizontal: AppSpacing.lg,
           vertical: AppSpacing.lg,
         ),
-        hintStyle: textTheme.bodyMedium?.copyWith(color: AppColors.textTertiary),
+        hintStyle: textTheme.bodyMedium?.copyWith(
+          color: AppColors.textTertiary,
+        ),
         prefixIconColor: AppColors.textTertiary,
         suffixIconColor: AppColors.textTertiary,
         border: OutlineInputBorder(
@@ -281,9 +283,19 @@ abstract final class AppThemes {
       // 40 · splash wordmark
       displaySmall: style(40, FontWeight.w700, letterSpacing: -1.2),
       // 26 · auth screen title
-      headlineMedium: style(26, FontWeight.w700, letterSpacing: -0.5, height: 1.2),
+      headlineMedium: style(
+        26,
+        FontWeight.w700,
+        letterSpacing: -0.5,
+        height: 1.2,
+      ),
       // 22 · screen headline / greeting
-      headlineSmall: style(22, FontWeight.w700, letterSpacing: -0.4, height: 1.25),
+      headlineSmall: style(
+        22,
+        FontWeight.w700,
+        letterSpacing: -0.4,
+        height: 1.25,
+      ),
       // 20 · section title / stat value
       titleLarge: style(20, FontWeight.w700, letterSpacing: -0.4),
       // 17 · app bar title
@@ -293,7 +305,12 @@ abstract final class AppThemes {
       // 16 / 14 / 13 · body
       bodyLarge: style(16, FontWeight.w400, height: 1.45),
       bodyMedium: style(14, FontWeight.w400, height: 1.45),
-      bodySmall: style(13, FontWeight.w400, height: 1.4, color: onSurfaceVariant),
+      bodySmall: style(
+        13,
+        FontWeight.w400,
+        height: 1.4,
+        color: onSurfaceVariant,
+      ),
       // 15 · button, 12 · chip / caption, 11 · micro label
       labelLarge: style(15, FontWeight.w600),
       labelMedium: style(12, FontWeight.w600),
@@ -348,4 +365,23 @@ class _OutlinedThumbShape extends SliderComponentShape {
         ..strokeWidth = 3,
     );
   }
+}
+
+/// Text styles from the mockups that do not map to a Material slot.
+extension AppTextStyles on TextTheme {
+  /// 13 / 600 · section heading inside a screen ("Duration", "Level").
+  TextStyle get sectionLabel => labelLarge!.copyWith(fontSize: 13);
+
+  /// 11 / 600 · label above a text field.
+  TextStyle get fieldLabel =>
+      labelSmall!.copyWith(color: AppColors.textSecondary, letterSpacing: 0.44);
+
+  /// 12 / 400 · secondary caption under a title.
+  TextStyle get caption => bodySmall!.copyWith(fontSize: 12);
+
+  /// 10 / 600 · badge and micro label.
+  TextStyle get badge => labelSmall!.copyWith(fontSize: 10, letterSpacing: 0);
+
+  /// 11 / 600 · uppercase eyebrow ("AI GENERATED").
+  TextStyle get eyebrow => labelSmall!.copyWith(letterSpacing: 1.1);
 }

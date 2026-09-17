@@ -11,9 +11,7 @@ abstract final class DefaultFirebaseOptions {
     return switch (defaultTargetPlatform) {
       TargetPlatform.iOS || TargetPlatform.macOS => ios,
       TargetPlatform.android => android,
-      _ => throw UnsupportedError(
-        'AceCoach only targets Android and iOS.',
-      ),
+      _ => throw UnsupportedError('AceCoach only targets Android and iOS.'),
     };
   }
 

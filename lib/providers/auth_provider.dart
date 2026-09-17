@@ -48,7 +48,9 @@ class AuthController extends _$AuthController {
 
   Future<bool> signIn({required String email, required String password}) {
     return _run(
-      () => ref.read(authRepositoryProvider).signIn(email: email, password: password),
+      () => ref
+          .read(authRepositoryProvider)
+          .signIn(email: email, password: password),
     );
   }
 
@@ -70,10 +72,12 @@ class AuthController extends _$AuthController {
   Future<bool> sendPasswordReset(String email) =>
       _run(() => ref.read(authRepositoryProvider).sendPasswordReset(email));
 
-  Future<bool> signOut() => _run(() => ref.read(authRepositoryProvider).signOut());
+  Future<bool> signOut() =>
+      _run(() => ref.read(authRepositoryProvider).signOut());
 
-  Future<bool> updateDisplayName(String displayName) =>
-      _run(() => ref.read(authRepositoryProvider).updateDisplayName(displayName));
+  Future<bool> updateDisplayName(String displayName) => _run(
+    () => ref.read(authRepositoryProvider).updateDisplayName(displayName),
+  );
 
   /// The failure behind the current error state, if any.
   AuthFailure? get failure {
