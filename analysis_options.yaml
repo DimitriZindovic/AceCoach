@@ -1,0 +1,33 @@
+# Static analysis for AceCoach.
+# `flutter analyze` must stay clean. riverpod_lint runs as a native analyzer
+# plugin (Dart 3.10+), declared with the top-level `plugins` key below.
+include: package:flutter_lints/flutter.yaml
+
+plugins:
+  riverpod_lint: ^3.1.9
+
+analyzer:
+  exclude:
+    - build/**
+    - android/**
+    - ios/**
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+  errors:
+    # freezed + json_serializable annotate constructor parameters on purpose.
+    invalid_annotation_target: ignore
+
+linter:
+  rules:
+    always_declare_return_types: true
+    avoid_dynamic_calls: true
+    avoid_redundant_argument_values: true
+    directives_ordering: true
+    prefer_const_constructors: true
+    prefer_const_constructors_in_immutables: true
+    prefer_const_declarations: true
+    prefer_const_literals_to_create_immutables: true
+    prefer_final_locals: true
+    require_trailing_commas: true
+    unawaited_futures: true
+    use_super_parameters: true
