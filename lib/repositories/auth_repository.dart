@@ -34,6 +34,21 @@ class AuthRepository {
     });
   }
 
+  Future<AppUser> register({
+    required String email,
+    required String password,
+    required String displayName,
+  }) {
+    return _guard(() async {
+      final credential = await _require().registerWithEmail(
+        email: email.trim(),
+        password: password,
+        displayName: displayName.trim(),
+      );
+      return _toAppUser(_require().currentUser ?? credential.user!);
+    });
+  }
+
   Future<void> sendPasswordReset(String email) =>
       _guard(() => _require().sendPasswordReset(email.trim()));
 

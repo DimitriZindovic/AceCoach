@@ -14,9 +14,23 @@ abstract final class AuthValidators {
     return null;
   }
 
-  static String? password(String? value) {
+  static String? password(String? value, {bool strict = false}) {
     final v = value ?? '';
     if (v.isEmpty) return 'Enter your password.';
+    if (strict && v.length < 8) return 'Use at least 8 characters.';
+    return null;
+  }
+
+  static String? name(String? value) {
+    final v = value?.trim() ?? '';
+    if (v.isEmpty) return 'Enter your name.';
+    if (v.length < 2) return 'Your name looks too short.';
+    return null;
+  }
+
+  static String? confirm(String? value, String original) {
+    if ((value ?? '').isEmpty) return 'Confirm your password.';
+    if (value != original) return 'Passwords do not match.';
     return null;
   }
 }
@@ -47,7 +61,6 @@ class AuthErrorBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Semantics(
       liveRegion: true,
       child: Container(
@@ -56,25 +69,23 @@ class AuthErrorBanner extends StatelessWidget {
           vertical: AppSpacing.sm + 2,
         ),
         decoration: BoxDecoration(
-          color: isDark
-              ? AppColors.error.withValues(alpha: 0.25)
-              : AppColors.errorContainer.withValues(alpha: 0.5),
+          color: AppColors.errorContainer.withValues(alpha: 0.5),
           borderRadius: AppRadius.circular(AppRadius.md),
           border: Border.all(color: AppColors.errorContainer),
         ),
         child: Row(
           children: [
-            Icon(
+            const Icon(
               Icons.error_outline_rounded,
               size: 18,
-              color: isDark ? AppColors.errorContainer : AppColors.error,
+              color: AppColors.error,
             ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: Text(
                 message,
                 style: Theme.of(context).textTheme.caption.copyWith(
-                  color: isDark ? AppColors.errorContainer : AppColors.error,
+                  color: AppColors.error,
                   fontWeight: FontWeight.w500,
                 ),
               ),

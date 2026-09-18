@@ -42,6 +42,18 @@ class AuthController extends _$AuthController {
     );
   }
 
+  Future<bool> register({
+    required String email,
+    required String password,
+    required String displayName,
+  }) {
+    return _run(
+      () => ref
+          .read(authRepositoryProvider)
+          .register(email: email, password: password, displayName: displayName),
+    );
+  }
+
   Future<bool> sendPasswordReset(String email) =>
       _run(() => ref.read(authRepositoryProvider).sendPasswordReset(email));
 

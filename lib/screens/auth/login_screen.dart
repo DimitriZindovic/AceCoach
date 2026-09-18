@@ -4,12 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../constants/app_colors.dart';
 import '../../constants/app_spacing.dart';
 import '../../providers/auth_provider.dart';
-import '../../widgets/app_logo.dart';
 import '../../widgets/primary_button.dart';
 import 'auth_form_widgets.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
+
+  static const String routePath = '/login';
 
   @override
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
@@ -81,9 +82,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const Align(
+                        Align(
                           alignment: Alignment.centerLeft,
-                          child: AppLogoBadge(),
+                          child: Image.asset(
+                            'assets/icons/logo_badge.png',
+                            width: 48,
+                            height: 48,
+                          ),
                         ),
                         const SizedBox(height: AppSpacing.sm),
                         Text('Welcome back', style: text.headlineMedium),
