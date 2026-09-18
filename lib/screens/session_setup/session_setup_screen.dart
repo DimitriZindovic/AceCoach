@@ -23,7 +23,6 @@ class SessionSetupScreen extends ConsumerWidget {
   static const String routePath = '/setup';
 
   void _generate(BuildContext context, WidgetRef ref) {
-    // Fire and navigate: the result screen renders the loading state.
     ref.read(sessionGenerationProvider.notifier).generate();
     context.pushNamed(AppRoutes.sessionResult);
   }
@@ -49,7 +48,6 @@ class SessionSetupScreen extends ConsumerWidget {
             weather: weather,
             preferIndoor: params.preferIndoor,
             onPreferIndoor: () => form.setPreferIndoor(true),
-            onRetry: () => ref.invalidate(currentWeatherProvider),
           ),
           DurationSlider(
             value: params.durationMinutes,
@@ -84,10 +82,6 @@ class SessionSetupScreen extends ConsumerWidget {
               labelOf: (p) => p.label,
               onSelected: form.setPlayers,
             ),
-          ),
-          _IndoorSwitch(
-            value: params.preferIndoor,
-            onChanged: form.setPreferIndoor,
           ),
         ],
       ),
@@ -146,26 +140,16 @@ class _WeatherHint extends StatelessWidget {
     required this.weather,
     required this.preferIndoor,
     required this.onPreferIndoor,
-    required this.onRetry,
   });
 
   final AsyncValue<Weather> weather;
   final bool preferIndoor;
   final VoidCallback onPreferIndoor;
-  final VoidCallback onRetry;
 
   @override
   Widget build(BuildContext context) {
     final Widget? banner = switch (weather) {
       AsyncValue(:final value?) => _forWeather(value),
-      AsyncValue(hasError: true) => WeatherAlertBanner(
-        icon: Icons.cloud_off_outlined,
-        tone: BannerTone.info,
-        message:
-            'Weather unavailable. Your session will be generated without it.',
-        actionLabel: 'Retry',
-        onAction: onRetry,
-      ),
       _ => null,
     };
     if (banner == null) return const SizedBox.shrink();
@@ -212,44 +196,3 @@ class _WeatherHint extends StatelessWidget {
   }
 }
 
-class _IndoorSwitch extends StatelessWidget {
-  const _IndoorSwitch({required this.value, required this.onChanged});
-
-  final bool value;
-  final ValueChanged<bool> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final text = Theme.of(context).textTheme;
-    return Material(
-      color: scheme.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: AppRadius.circular(AppRadius.md),
-        side: BorderSide(color: scheme.outline),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: SwitchListTile.adaptive(
-        value: value,
-        onChanged: onChanged,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md + 2,
-        ),
-        secondary: Icon(
-          Icons.home_work_outlined,
-          color: scheme.onSurfaceVariant,
-          size: 20,
-        ),
-        title: Text('Indoor court only', style: text.sectionLabel),
-        subtitle: Text(
-          'Every drill works without sun, wind or extra space.',
-          style: text.labelSmall?.copyWith(
-            fontWeight: FontWeight.w400,
-            letterSpacing: 0,
-            color: scheme.onSurfaceVariant,
-          ),
-        ),
-      ),
-    );
-  }
-}

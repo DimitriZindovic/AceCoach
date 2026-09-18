@@ -6,7 +6,6 @@ import '../constants/app_spacing.dart';
 import '../constants/app_themes.dart';
 import '../models/app_exception.dart';
 import '../models/weather.dart';
-import 'loading_overlay.dart';
 
 IconData weatherIcon(Weather weather) {
   final id = weather.conditionId;
@@ -35,11 +34,7 @@ class WeatherChip extends StatelessWidget {
           error: error,
           onRetry: onRetry,
         ),
-        _ => const SkeletonBox(
-          key: ValueKey('weather-loading'),
-          height: 74,
-          radius: AppRadius.xl,
-        ),
+        _ => const SizedBox.shrink(key: ValueKey('weather-loading')),
       },
     );
   }

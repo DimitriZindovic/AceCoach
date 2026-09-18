@@ -172,7 +172,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 PrimaryButton(
                   label: 'Create account',
                   onPressed: _submit,
-                  isLoading: isLoading,
                 ),
                 const SizedBox(height: AppSpacing.md),
                 TextButton(

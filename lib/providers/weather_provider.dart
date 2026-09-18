@@ -12,7 +12,7 @@ import '../services/weather_api_service.dart';
 part 'weather_provider.g.dart';
 
 @Riverpod(keepAlive: true)
-Dio dio(Ref ref) {
+Future<Weather> currentWeather(Ref ref) async {
   final dio = Dio(
     BaseOptions(
       baseUrl: ApiConstants.openWeatherBaseUrl,
@@ -21,33 +21,13 @@ Dio dio(Ref ref) {
     ),
   );
   ref.onDispose(dio.close);
-  return dio;
-}
 
-@Riverpod(keepAlive: true)
-WeatherApiService weatherApiService(Ref ref) {
-  return WeatherApiService(
-    ref.watch(dioProvider),
-    apiKey: ApiConstants.openWeatherApiKey,
+  final repository = WeatherRepository(
+    WeatherApiService(dio, apiKey: ApiConstants.openWeatherApiKey),
+    const LocationService(),
   );
-}
 
-@Riverpod(keepAlive: true)
-LocationService locationService(Ref ref) => const LocationService();
-
-@Riverpod(keepAlive: true)
-WeatherRepository weatherRepository(Ref ref) {
-  return WeatherRepository(
-    ref.watch(weatherApiServiceProvider),
-    ref.watch(locationServiceProvider),
-  );
-}
-
-@Riverpod(keepAlive: true)
-Future<Weather> currentWeather(Ref ref) async {
-  final weather = await ref
-      .watch(weatherRepositoryProvider)
-      .getCurrentWeather();
+  final weather = await repository.getCurrentWeather();
 
   final timer = Timer(ApiConstants.weatherCacheDuration, ref.invalidateSelf);
   ref.onDispose(timer.cancel);

@@ -40,19 +40,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         );
   }
 
-  Future<void> _forgotPassword() async {
-    final sent = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      builder: (_) => _ForgotPasswordSheet(initialEmail: _emailController.text),
-    );
-    if (sent == true && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Reset link sent. Check your inbox.')),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
@@ -153,9 +140,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                         Align(
                           alignment: Alignment.centerRight,
-                          child: TextButton(
-                            onPressed: isLoading ? null : _forgotPassword,
-                            child: const Text('Forgot password?'),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.md,
+                              vertical: AppSpacing.md,
+                            ),
+                            child: Text(
+                              'Forgot password?',
+                              style: Theme.of(context).textTheme.labelMedium
+                                  ?.copyWith(color: AppColors.primaryDark),
+                            ),
                           ),
                         ),
                         if (failure != null) ...[
@@ -166,7 +160,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         PrimaryButton(
                           label: 'Log in',
                           onPressed: _submit,
-                          isLoading: isLoading,
                         ),
                         const Spacer(),
                         const SizedBox(height: AppSpacing.lg),
@@ -185,104 +178,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
             );
           },
-        ),
-      ),
-    );
-  }
-}
-
-class _ForgotPasswordSheet extends ConsumerStatefulWidget {
-  const _ForgotPasswordSheet({required this.initialEmail});
-
-  final String initialEmail;
-
-  @override
-  ConsumerState<_ForgotPasswordSheet> createState() =>
-      _ForgotPasswordSheetState();
-}
-
-class _ForgotPasswordSheetState extends ConsumerState<_ForgotPasswordSheet> {
-  final _formKey = GlobalKey<FormState>();
-  late final TextEditingController _controller = TextEditingController(
-    text: widget.initialEmail,
-  );
-  bool _sending = false;
-  String? _error;
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  Future<void> _send() async {
-    if (!(_formKey.currentState?.validate() ?? false)) return;
-    setState(() {
-      _sending = true;
-      _error = null;
-    });
-    final controller = ref.read(authControllerProvider.notifier);
-    final ok = await controller.sendPasswordReset(_controller.text);
-    if (!mounted) return;
-    if (ok) {
-      Navigator.of(context).pop(true);
-      return;
-    }
-    setState(() {
-      _sending = false;
-      _error = controller.failure?.message ?? 'Could not send the email.';
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        26,
-        AppSpacing.sm,
-        26,
-        MediaQuery.viewInsetsOf(context).bottom + AppSpacing.xxl,
-      ),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text('Reset your password', style: text.titleMedium),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              'We will email you a link to choose a new password.',
-              style: text.bodySmall,
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            LabeledField(
-              label: 'Email',
-              child: TextFormField(
-                controller: _controller,
-                autofocus: true,
-                keyboardType: TextInputType.emailAddress,
-                textInputAction: TextInputAction.send,
-                onFieldSubmitted: (_) => _send(),
-                decoration: const InputDecoration(
-                  hintText: 'you@example.com',
-                  prefixIcon: Icon(Icons.mail_outline_rounded, size: 18),
-                ),
-                validator: AuthValidators.email,
-              ),
-            ),
-            if (_error != null) ...[
-              const SizedBox(height: AppSpacing.md),
-              AuthErrorBanner(message: _error!),
-            ],
-            const SizedBox(height: AppSpacing.lg),
-            PrimaryButton(
-              label: 'Send reset link',
-              onPressed: _send,
-              isLoading: _sending,
-            ),
-          ],
         ),
       ),
     );

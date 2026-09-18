@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart' show immutable;
-import 'package:flutter/material.dart' show DateTimeRange, DateUtils;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../models/session_params.dart';
@@ -10,75 +9,16 @@ import 'session_generation_provider.dart';
 part 'session_history_provider.g.dart';
 
 @immutable
-class HistoryFilter {
-  const HistoryFilter({
-    this.query = '',
-    this.level,
-    this.stroke,
-    this.dateRange,
-  });
-
-  final String query;
-  final SkillLevel? level;
-  final Stroke? stroke;
-  final DateTimeRange? dateRange;
-
-  bool get isActive =>
-      query.trim().isNotEmpty ||
-      level != null ||
-      stroke != null ||
-      dateRange != null;
-
-  HistoryFilter copyWith({
-    String? query,
-    SkillLevel? Function()? level,
-    Stroke? Function()? stroke,
-    DateTimeRange? Function()? dateRange,
-  }) {
-    return HistoryFilter(
-      query: query ?? this.query,
-      level: level == null ? this.level : level(),
-      stroke: stroke == null ? this.stroke : stroke(),
-      dateRange: dateRange == null ? this.dateRange : dateRange(),
-    );
-  }
-
-  List<TrainingSession> apply(List<TrainingSession> sessions) {
-    final needle = query.trim().toLowerCase();
-    return sessions.where((session) {
-      if (level != null && session.params.level != level) return false;
-      if (stroke != null && !session.params.strokes.contains(stroke)) {
-        return false;
-      }
-      if (dateRange case final range?) {
-        final day = DateUtils.dateOnly(session.createdAt);
-        if (day.isBefore(DateUtils.dateOnly(range.start)) ||
-            day.isAfter(DateUtils.dateOnly(range.end))) {
-          return false;
-        }
-      }
-      if (needle.isEmpty) return true;
-      return session.title.toLowerCase().contains(needle) ||
-          session.summary.toLowerCase().contains(needle) ||
-          session.exercises.any((e) => e.title.toLowerCase().contains(needle));
-    }).toList();
-  }
-}
-
-@immutable
 class ProfileStats {
   const ProfileStats({
     required this.savedCount,
-    required this.completedCount,
     required this.totalMinutes,
     this.topStroke,
   });
 
-  const ProfileStats.empty()
-    : this(savedCount: 0, completedCount: 0, totalMinutes: 0);
+  const ProfileStats.empty() : this(savedCount: 0, totalMinutes: 0);
 
   final int savedCount;
-  final int completedCount;
 
   final int totalMinutes;
 
@@ -94,10 +34,9 @@ class ProfileStats {
   }
 
   static ProfileStats fromSessions(List<TrainingSession> sessions) {
-    final completed = sessions.where((s) => s.isCompleted).toList();
     final counts = <Stroke, int>{};
     var minutes = 0;
-    for (final session in completed) {
+    for (final session in sessions) {
       minutes += session.params.durationMinutes;
       for (final stroke in session.params.strokes) {
         counts.update(stroke, (n) => n + 1, ifAbsent: () => 1);
@@ -114,7 +53,6 @@ class ProfileStats {
     }
     return ProfileStats(
       savedCount: sessions.length,
-      completedCount: completed.length,
       totalMinutes: minutes,
       topStroke: top,
     );
@@ -123,67 +61,7 @@ class ProfileStats {
 
 @Riverpod(keepAlive: true)
 Stream<List<TrainingSession>> sessionHistory(Ref ref) {
-  final user = ref.watch(currentUserProvider);
+  final user = ref.watch(authStateProvider).value;
   if (user == null) return Stream.value(const []);
   return ref.watch(sessionRepositoryProvider).watchHistory(user.uid);
-}
-
-@riverpod
-Future<TrainingSession?> savedSession(Ref ref, String sessionId) {
-  // Watching the history keeps the detail screen in sync with edits.
-  final history = ref.watch(sessionHistoryProvider).value;
-  final fromHistory = history?.where((s) => s.id == sessionId).firstOrNull;
-  if (fromHistory != null) return Future.value(fromHistory);
-  return ref.watch(sessionRepositoryProvider).find(sessionId);
-}
-
-@Riverpod(keepAlive: true)
-class HistoryFilterNotifier extends _$HistoryFilterNotifier {
-  @override
-  HistoryFilter build() => const HistoryFilter();
-
-  void setQuery(String query) => state = state.copyWith(query: query);
-
-  void setLevel(SkillLevel? level) =>
-      state = state.copyWith(level: () => level);
-
-  void setStroke(Stroke? stroke) =>
-      state = state.copyWith(stroke: () => stroke);
-
-  void setDateRange(DateTimeRange? range) =>
-      state = state.copyWith(dateRange: () => range);
-
-  void clear() => state = const HistoryFilter();
-}
-
-@riverpod
-AsyncValue<List<TrainingSession>> filteredHistory(Ref ref) {
-  final filter = ref.watch(historyFilterProvider);
-  return ref.watch(sessionHistoryProvider).whenData(filter.apply);
-}
-
-@riverpod
-ProfileStats profileStats(Ref ref) {
-  final sessions = ref.watch(sessionHistoryProvider).value ?? const [];
-  return ProfileStats.fromSessions(sessions);
-}
-
-@riverpod
-class HistoryActions extends _$HistoryActions {
-  @override
-  AsyncValue<void> build() => const AsyncData(null);
-
-  Future<void> delete(String id) =>
-      _run(() => ref.read(sessionRepositoryProvider).delete(id));
-
-  Future<void> setCompleted(String id, {required bool completed}) => _run(
-    () => ref
-        .read(sessionRepositoryProvider)
-        .setCompleted(id, completed: completed),
-  );
-
-  Future<void> _run(Future<void> Function() action) async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(action);
-  }
 }

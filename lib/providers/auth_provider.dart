@@ -13,21 +13,14 @@ bool firebaseReady(Ref ref) =>
     throw UnimplementedError('firebaseReadyProvider must be overridden');
 
 @Riverpod(keepAlive: true)
-AuthService? authService(Ref ref) {
-  if (!ref.watch(firebaseReadyProvider)) return null;
-  return AuthService(FirebaseAuth.instance);
+AuthRepository authRepository(Ref ref) {
+  final ready = ref.watch(firebaseReadyProvider);
+  return AuthRepository(ready ? AuthService(FirebaseAuth.instance) : null);
 }
-
-@Riverpod(keepAlive: true)
-AuthRepository authRepository(Ref ref) =>
-    AuthRepository(ref.watch(authServiceProvider));
 
 @Riverpod(keepAlive: true)
 Stream<AppUser?> authState(Ref ref) =>
     ref.watch(authRepositoryProvider).watchUser();
-
-@riverpod
-AppUser? currentUser(Ref ref) => ref.watch(authStateProvider).value;
 
 @riverpod
 class AuthController extends _$AuthController {
@@ -53,9 +46,6 @@ class AuthController extends _$AuthController {
           .register(email: email, password: password, displayName: displayName),
     );
   }
-
-  Future<bool> sendPasswordReset(String email) =>
-      _run(() => ref.read(authRepositoryProvider).sendPasswordReset(email));
 
   Future<bool> signOut() =>
       _run(() => ref.read(authRepositoryProvider).signOut());

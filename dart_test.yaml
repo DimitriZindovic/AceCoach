@@ -1,5 +1,0 @@
-# Screenshot goldens are rendering-dependent; run them on demand:
-#   flutter test --run-skipped --tags screenshots --update-goldens
-tags:
-  screenshots:
-    skip: "Screenshots are generated on demand (see dart_test.yaml)."

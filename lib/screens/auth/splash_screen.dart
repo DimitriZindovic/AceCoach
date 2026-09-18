@@ -59,22 +59,6 @@ class SplashScreen extends StatelessWidget {
                       ],
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 46),
-                    child: SizedBox(
-                      width: 120,
-                      height: 3,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(2),
-                        child: LinearProgressIndicator(
-                          backgroundColor: AppColors.surface.withValues(
-                            alpha: 0.2,
-                          ),
-                          color: AppColors.surface.withValues(alpha: 0.45),
-                        ),
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),

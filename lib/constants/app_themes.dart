@@ -74,6 +74,8 @@ abstract final class AppThemes {
         style: FilledButton.styleFrom(
           backgroundColor: scheme.primary,
           foregroundColor: scheme.onPrimary,
+          disabledBackgroundColor: scheme.primary,
+          disabledForegroundColor: scheme.onPrimary,
           minimumSize: const Size.fromHeight(AppSizes.buttonHeight),
           shape: RoundedRectangleBorder(
             borderRadius: AppRadius.circular(AppRadius.lg),
@@ -84,6 +86,7 @@ abstract final class AppThemes {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.primaryDark,
+          disabledForegroundColor: AppColors.primaryDark,
           minimumSize: const Size.fromHeight(AppSizes.buttonHeight),
           side: const BorderSide(color: AppColors.primary, width: 1.5),
           shape: RoundedRectangleBorder(
@@ -95,6 +98,7 @@ abstract final class AppThemes {
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: AppColors.primaryDark,
+          disabledForegroundColor: AppColors.primaryDark,
           minimumSize: const Size(AppSizes.minTapTarget, AppSizes.minTapTarget),
           textStyle: textTheme.labelMedium,
         ),

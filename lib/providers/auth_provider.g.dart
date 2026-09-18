@@ -49,47 +49,6 @@ final class FirebaseReadyProvider extends $FunctionalProvider<bool, bool, bool>
 
 String _$firebaseReadyHash() => r'477c32b97a3fe4ecc90faf7b1bf375f3fe7e2d6a';
 
-@ProviderFor(authService)
-final authServiceProvider = AuthServiceProvider._();
-
-final class AuthServiceProvider
-    extends $FunctionalProvider<AuthService?, AuthService?, AuthService?>
-    with $Provider<AuthService?> {
-  AuthServiceProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'authServiceProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$authServiceHash();
-
-  @$internal
-  @override
-  $ProviderElement<AuthService?> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
-
-  @override
-  AuthService? create(Ref ref) {
-    return authService(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(AuthService? value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<AuthService?>(value),
-    );
-  }
-}
-
-String _$authServiceHash() => r'36d1e265c8a651a6c067325ca559fcf0c59130ba';
-
 @ProviderFor(authRepository)
 final authRepositoryProvider = AuthRepositoryProvider._();
 
@@ -129,7 +88,7 @@ final class AuthRepositoryProvider
   }
 }
 
-String _$authRepositoryHash() => r'e09131b14437260af109865b96e00bfa90a55213';
+String _$authRepositoryHash() => r'81369c15e0ddfb55292b9d0ccd32284450d1faa3';
 
 @ProviderFor(authState)
 final authStateProvider = AuthStateProvider._();
@@ -164,47 +123,6 @@ final class AuthStateProvider
 }
 
 String _$authStateHash() => r'2e090c37b1f90224c29936800a45af16026b21c1';
-
-@ProviderFor(currentUser)
-final currentUserProvider = CurrentUserProvider._();
-
-final class CurrentUserProvider
-    extends $FunctionalProvider<AppUser?, AppUser?, AppUser?>
-    with $Provider<AppUser?> {
-  CurrentUserProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'currentUserProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$currentUserHash();
-
-  @$internal
-  @override
-  $ProviderElement<AppUser?> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
-
-  @override
-  AppUser? create(Ref ref) {
-    return currentUser(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(AppUser? value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<AppUser?>(value),
-    );
-  }
-}
-
-String _$currentUserHash() => r'77b0bdcd0390cdd6963f5457fbdfd9a0af688e95';
 
 @ProviderFor(AuthController)
 final authControllerProvider = AuthControllerProvider._();

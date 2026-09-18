@@ -1,29 +1,24 @@
 import 'package:flutter/foundation.dart' show immutable;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../constants/api_constants.dart';
 import '../models/app_exception.dart';
 import '../models/training_session.dart';
 import '../repositories/session_repository.dart';
 import '../services/ai_service.dart';
-import 'app_settings_provider.dart';
+import '../services/local_database_service.dart';
 import 'auth_provider.dart';
 import 'session_form_provider.dart';
-import 'session_history_provider.dart';
 import 'weather_provider.dart';
 
 part 'session_generation_provider.g.dart';
 
 @Riverpod(keepAlive: true)
-AiService aiService(Ref ref) {
-  return AiService.fromFirebase(modelName: ApiConstants.geminiModel);
-}
-
-@Riverpod(keepAlive: true)
 SessionRepository sessionRepository(Ref ref) {
+  final database = LocalDatabaseService();
+  ref.onDispose(database.close);
   return SessionRepository(
-    ref.watch(aiServiceProvider),
-    ref.watch(localDatabaseProvider),
+    AiService.fromFirebase(backend: AiBackend.agentPlatform),
+    database,
   );
 }
 
@@ -67,11 +62,6 @@ class SessionGeneration extends _$SessionGeneration {
 
   Future<void> regenerate() => _generate(previousTitle: state.session?.title);
 
-  Future<void> adjustForIndoor() {
-    ref.read(sessionFormProvider.notifier).setPreferIndoor(true);
-    return _generate(previousTitle: state.session?.title);
-  }
-
   Future<bool> save() async {
     final session = state.session;
     if (session == null) return false;
@@ -82,7 +72,7 @@ class SessionGeneration extends _$SessionGeneration {
   void clear() => state = const SessionGenerationState();
 
   Future<void> _generate({required String? previousTitle}) async {
-    final user = ref.read(currentUserProvider);
+    final user = ref.read(authStateProvider).value;
     if (user == null) {
       state = state.copyWith(
         isGenerating: false,
@@ -117,10 +107,3 @@ class SessionGeneration extends _$SessionGeneration {
   }
 }
 
-@riverpod
-bool isCurrentSessionSaved(Ref ref) {
-  final id = ref.watch(sessionGenerationProvider).session?.id;
-  if (id == null) return false;
-  final history = ref.watch(sessionHistoryProvider).value ?? const [];
-  return history.any((session) => session.id == id);
-}

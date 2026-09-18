@@ -10,6 +10,20 @@ import '../models/exercise.dart';
 import '../models/session_params.dart';
 import '../models/weather.dart';
 
+enum AiBackend {
+  agentPlatform,
+  googleAI;
+
+  static AiBackend? fromName(String? value) {
+    if (value == null) return null;
+    final normalized = value.trim().toLowerCase();
+    for (final backend in AiBackend.values) {
+      if (backend.name.toLowerCase() == normalized) return backend;
+    }
+    return null;
+  }
+}
+
 class AiSessionDraft {
   const AiSessionDraft({
     required this.title,
@@ -28,22 +42,27 @@ class AiSessionDraft {
 }
 
 class AiService {
-  AiService(this._model);
+  AiService(GenerativeModel model)
+    : _modelName = 'gemini-3.6-flash',
+      _backends = const [AiBackend.agentPlatform],
+      _injectedModel = model;
 
-  factory AiService.fromFirebase({String? modelName}) {
-    final model = FirebaseAI.googleAI().generativeModel(
-      model: modelName ?? ApiConstants.defaultGeminiModel,
-      systemInstruction: Content.system(systemInstruction),
-      generationConfig: GenerationConfig(
-        temperature: 0.8,
-        responseMimeType: 'application/json',
-        responseSchema: responseSchema,
-      ),
-    );
-    return AiService(model);
-  }
+  AiService.fromFirebase({String? modelName, AiBackend? backend})
+    : _modelName = modelName ?? 'gemini-3.6-flash',
+      _backends = backend == null ? AiBackend.values : [backend],
+      _injectedModel = null;
 
-  final GenerativeModel _model;
+  final String _modelName;
+  final List<AiBackend> _backends;
+  final GenerativeModel? _injectedModel;
+  final Map<AiBackend, GenerativeModel> _models = {};
+
+  AiBackend? _activeBackend;
+
+  AiBackend? get activeBackend => _activeBackend;
+
+  static const int _maxAttempts = 2;
+  static const Duration _retryDelay = Duration(seconds: 1);
 
   static const String systemInstruction =
       'You are AceCoach, an experienced tennis coach who designs precise, '
@@ -174,31 +193,7 @@ class AiService {
       strictDuration: strictDuration,
     );
 
-    final String? text;
-    try {
-      final response = await _model
-          .generateContent([Content.text(prompt)])
-          .timeout(ApiConstants.aiTimeout);
-      text = response.text;
-    } on AppException {
-      rethrow;
-    } on SocketException {
-      throw const AppException(
-        'No connection. Check your network and try again.',
-      );
-    } on TimeoutException {
-      throw const AppException(
-        'No connection. Check your network and try again.',
-      );
-    } on ServerException catch (error) {
-      throw _mapServerException(error);
-    } on FirebaseAIException catch (error) {
-      throw _mapServerException(error);
-    } catch (_) {
-      throw const AppException(
-        'Something went wrong while building your session. Please retry.',
-      );
-    }
+    final text = await _requestJson(prompt);
 
     if (text == null || text.trim().isEmpty) {
       throw const AppException(
@@ -206,6 +201,82 @@ class AiService {
       );
     }
     return parseDraft(text, requestedMinutes: params.durationMinutes);
+  }
+
+  Future<String?> _requestJson(String prompt) async {
+    final active = _activeBackend;
+    final candidates = active == null ? _backends : <AiBackend>[active];
+
+    var failure = const AppException(
+      'Something went wrong while building your session. Please retry.',
+    );
+
+    for (final backend in candidates) {
+      final GenerativeModel model;
+      try {
+        model = _modelFor(backend);
+      } on Object catch (error) {
+        throw _mapStartupError(error);
+      }
+
+      var unavailable = false;
+      for (
+        var attempt = 1;
+        attempt <= _maxAttempts && !unavailable;
+        attempt++
+      ) {
+        try {
+          final response = await model
+              .generateContent([Content.text(prompt)])
+              .timeout(ApiConstants.aiTimeout);
+          _activeBackend = backend;
+          return response.text;
+        } on TimeoutException {
+          throw const AppException(
+            'No connection. Check your network and try again.',
+          );
+        } on SocketException {
+          throw const AppException(
+            'No connection. Check your network and try again.',
+          );
+        } on FirebaseAIException catch (error) {
+          failure = _mapAiException(error);
+          if (_isBackendUnavailable(error)) {
+            unavailable = true;
+          } else if (_isTransient(error) && attempt < _maxAttempts) {
+            await Future<void>.delayed(_retryDelay * attempt);
+          } else {
+            throw failure;
+          }
+        } on Object catch (error) {
+          throw _mapStartupError(error);
+        }
+      }
+    }
+
+    throw failure;
+  }
+
+  GenerativeModel _modelFor(AiBackend backend) {
+    final injected = _injectedModel;
+    if (injected != null) return injected;
+    return _models.putIfAbsent(backend, () => _createModel(backend));
+  }
+
+  GenerativeModel _createModel(AiBackend backend) {
+    final firebaseAi = switch (backend) {
+      AiBackend.agentPlatform => FirebaseAI.agentPlatform(),
+      AiBackend.googleAI => FirebaseAI.googleAI(),
+    };
+    return firebaseAi.generativeModel(
+      model: _modelName,
+      systemInstruction: Content.system(systemInstruction),
+      generationConfig: GenerationConfig(
+        temperature: 0.8,
+        responseMimeType: 'application/json',
+        responseSchema: responseSchema,
+      ),
+    );
   }
 
   static AiSessionDraft parseDraft(
@@ -294,7 +365,70 @@ class AiService {
     return exercise;
   }
 
-  static AppException _mapServerException(FirebaseAIException error) {
+  static bool _isBackendUnavailable(FirebaseAIException error) {
+    if (error is ServiceApiNotEnabled) return true;
+    final message = error.message.toLowerCase();
+    return message.contains('permission_denied') ||
+        message.contains('permission denied') ||
+        message.contains('not_found') ||
+        message.contains('not found') ||
+        message.contains('is not enabled') ||
+        message.contains('has not been used') ||
+        message.contains('403') ||
+        message.contains('404');
+  }
+
+  static bool _isTransient(FirebaseAIException error) {
+    final message = error.message.toLowerCase();
+    return message.contains('server error [500]') ||
+        message.contains('server error [502]') ||
+        message.contains('server error [503]') ||
+        message.contains('server error [504]') ||
+        message.contains('high demand') ||
+        message.contains('overloaded') ||
+        message.contains('unavailable') ||
+        message.contains('try again later');
+  }
+
+  static AppException _mapAiException(FirebaseAIException error) {
+    if (error is ServiceApiNotEnabled) {
+      return const AppException(
+        'Firebase AI Logic is not enabled on this project yet. Open the '
+        'Firebase console, go to AI Logic and click "Get started".',
+      );
+    }
+    if (error is QuotaExceeded) {
+      final quotaMessage = error.message.toLowerCase();
+      if (quotaMessage.contains('free_tier') ||
+          quotaMessage.contains('free tier') ||
+          quotaMessage.contains('perday')) {
+        return const AppException(
+          'The daily free Gemini quota for this Firebase project is used up. '
+          'Enable billing on the project or try again tomorrow.',
+        );
+      }
+      return const AppException(
+        'The coach is busy right now. Try again in a minute.',
+      );
+    }
+    if (error is UnsupportedUserLocation) {
+      return const AppException(
+        'Firebase AI Logic is not available from your current location.',
+      );
+    }
+    if (error is InvalidApiKey) {
+      return const AppException(
+        'This build is not linked to a valid Firebase project. Check the '
+        'google-services.json and GoogleService-Info.plist files.',
+      );
+    }
+
+    if (_isTransient(error)) {
+      return const AppException(
+        'The coach is busy right now. Try again in a minute.',
+      );
+    }
+
     final message = error.message.toLowerCase();
     if (message.contains('429') ||
         message.contains('quota') ||
@@ -310,6 +444,21 @@ class AiService {
         message.contains('connection')) {
       return const AppException(
         'No connection. Check your network and try again.',
+      );
+    }
+    return const AppException(
+      'Something went wrong while building your session. Please retry.',
+    );
+  }
+
+  static AppException _mapStartupError(Object error) {
+    if (error is AppException) return error;
+    final message = error.toString().toLowerCase();
+    if (message.contains('no firebase app') ||
+        message.contains('firebase has not been correctly initialized')) {
+      return const AppException(
+        'Firebase is not configured on this build, so sessions cannot be '
+        'generated.',
       );
     }
     return const AppException(

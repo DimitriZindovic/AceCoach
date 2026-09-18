@@ -15,34 +15,12 @@ class ProfileScreen extends ConsumerWidget {
   static const String routePath = '/profile';
   static const String appVersion = '1.0.0';
 
-  Future<void> _signOut(BuildContext context, WidgetRef ref) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Log out?'),
-        content: const Text('Your saved sessions stay on this device.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: FilledButton.styleFrom(minimumSize: const Size(88, 44)),
-            child: const Text('Log out'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
-    await ref.read(authControllerProvider.notifier).signOut();
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(currentUserProvider);
-    final stats = ref.watch(profileStatsProvider);
-    final auth = ref.watch(authControllerProvider);
+    final user = ref.watch(authStateProvider).value;
+    final stats = ProfileStats.fromSessions(
+      ref.watch(sessionHistoryProvider).value ?? const [],
+    );
     final text = Theme.of(context).textTheme;
 
     return Scaffold(
@@ -136,8 +114,8 @@ class ProfileScreen extends ConsumerWidget {
                   children: [
                     Expanded(
                       child: StatTile(
-                        value: '${stats.completedCount}',
-                        label: 'Sessions completed',
+                        value: '${stats.savedCount}',
+                        label: 'Sessions saved',
                       ),
                     ),
                     const SizedBox(width: AppSpacing.sm + 2),
@@ -153,7 +131,7 @@ class ProfileScreen extends ConsumerWidget {
                 StatTile(
                   value: stats.topStroke?.label ?? '—',
                   label: stats.topStroke == null
-                      ? 'Most-trained stroke · complete a session to find out'
+                      ? 'Most-trained stroke · save a session to find out'
                       : 'Most-trained stroke',
                 ),
                 const SizedBox(height: AppSpacing.md + 2),
@@ -178,8 +156,8 @@ class ProfileScreen extends ConsumerWidget {
                   label: 'Log out',
                   icon: Icons.logout_rounded,
                   variant: AppButtonVariant.destructive,
-                  isLoading: auth.isLoading,
-                  onPressed: () => _signOut(context, ref),
+                  onPressed: () =>
+                      ref.read(authControllerProvider.notifier).signOut(),
                 ),
                 const SizedBox(height: AppSpacing.md + 2),
                 Text(

@@ -7,7 +7,6 @@ import '../screens/auth/login_screen.dart';
 import '../screens/auth/register_screen.dart';
 import '../screens/auth/splash_screen.dart';
 import '../screens/history/history_screen.dart';
-import '../screens/history/session_detail_screen.dart';
 import '../screens/home/home_screen.dart';
 import '../screens/profile/profile_screen.dart';
 import '../screens/session_result/session_result_screen.dart';
@@ -28,7 +27,6 @@ abstract final class AppRoutes {
   static const String sessionSetup = 'sessionSetup';
   static const String sessionResult = 'sessionResult';
   static const String history = 'history';
-  static const String sessionDetail = 'sessionDetail';
   static const String profile = 'profile';
 }
 
@@ -95,18 +93,6 @@ GoRouter appRouter(Ref ref) {
                 path: HistoryScreen.routePath,
                 name: AppRoutes.history,
                 builder: (context, state) => const HistoryScreen(),
-                routes: [
-                  GoRoute(
-                    path: SessionDetailScreen.routeSegment,
-                    name: AppRoutes.sessionDetail,
-                    parentNavigatorKey: _rootNavigatorKey,
-                    builder: (context, state) => SessionDetailScreen(
-                      sessionId:
-                          state.pathParameters[SessionDetailScreen
-                              .sessionIdParameter]!,
-                    ),
-                  ),
-                ],
               ),
             ],
           ),

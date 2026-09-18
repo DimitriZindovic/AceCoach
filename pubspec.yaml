@@ -1,6 +1,6 @@
 name: ace_coach
 description: "AceCoach - login screen with Firebase authentication."
-publish_to: 'none'
+publish_to: "none"
 version: 1.0.0+1
 
 environment:
@@ -11,50 +11,36 @@ dependencies:
     sdk: flutter
   cupertino_icons: ^1.0.8
 
-  # State management
   flutter_riverpod: ^3.4.3
   riverpod_annotation: ^4.0.7
 
-  # Navigation
   go_router: ^18.0.1
 
-  # Firebase (auth + Gemini through Firebase AI Logic)
   firebase_core: ^4.15.0
   firebase_auth: ^6.7.0
   firebase_ai: ^4.0.0
 
-  # HTTP
   dio: ^5.11.1
 
-  # Local storage
-  drift: ^2.35.0
-  drift_flutter: ^0.3.1
-
-  # Utilities
   geolocator: ^14.0.3
   google_fonts: ^8.2.1
   intl: ^0.20.3
   uuid: ^4.6.0
+  path_provider: ^2.1.6
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
 
-  # Code generation
   build_runner: ^2.16.1
   riverpod_generator: ^4.0.9
-  drift_dev: ^2.35.0
-
-  # Lints (riverpod_lint 3.1+ is a native analyzer plugin, no custom_lint needed)
   riverpod_lint: ^3.1.9
 
-  # Tests
   mocktail: ^1.0.5
 
 flutter:
   uses-material-design: true
   assets:
     - assets/icons/
-    # Poppins bundled so google_fonts never needs the network (OFL licence).
     - assets/google_fonts/

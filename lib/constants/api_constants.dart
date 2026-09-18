@@ -7,17 +7,11 @@ abstract final class ApiConstants {
 
   static const Duration weatherCacheDuration = Duration(minutes: 30);
 
-  static const String defaultGeminiModel = 'gemini-2.5-flash';
   static const Duration aiTimeout = Duration(seconds: 45);
 
   static const Duration locationTimeout = Duration(seconds: 8);
 
   static const String openWeatherApiKey = String.fromEnvironment(
     'OPENWEATHER_API_KEY',
-  );
-
-  static const String geminiModel = String.fromEnvironment(
-    'GEMINI_MODEL',
-    defaultValue: defaultGeminiModel,
   );
 }

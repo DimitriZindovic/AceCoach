@@ -9,47 +9,6 @@ part of 'session_generation_provider.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
-@ProviderFor(aiService)
-final aiServiceProvider = AiServiceProvider._();
-
-final class AiServiceProvider
-    extends $FunctionalProvider<AiService, AiService, AiService>
-    with $Provider<AiService> {
-  AiServiceProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'aiServiceProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$aiServiceHash();
-
-  @$internal
-  @override
-  $ProviderElement<AiService> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
-
-  @override
-  AiService create(Ref ref) {
-    return aiService(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(AiService value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<AiService>(value),
-    );
-  }
-}
-
-String _$aiServiceHash() => r'11384c22729353f6a88317c83c49736cf05bc90e';
-
 @ProviderFor(sessionRepository)
 final sessionRepositoryProvider = SessionRepositoryProvider._();
 
@@ -95,7 +54,7 @@ final class SessionRepositoryProvider
   }
 }
 
-String _$sessionRepositoryHash() => r'73c48ea538d18d25423f4233c930a295824c546f';
+String _$sessionRepositoryHash() => r'22fb3ce1546f4ce896d5ef53579a0ad51b5bbd15';
 
 @ProviderFor(SessionGeneration)
 final sessionGenerationProvider = SessionGenerationProvider._();
@@ -129,7 +88,7 @@ final class SessionGenerationProvider
   }
 }
 
-String _$sessionGenerationHash() => r'94d3793db995a1a793574a34c6431753dfd347b5';
+String _$sessionGenerationHash() => r'3c9c5d8726b22d4ef0ee2cf9cef721387ab60004';
 
 abstract class _$SessionGeneration extends $Notifier<SessionGenerationState> {
   SessionGenerationState build();
@@ -149,45 +108,3 @@ abstract class _$SessionGeneration extends $Notifier<SessionGenerationState> {
     return element.handleCreate(ref, build);
   }
 }
-
-@ProviderFor(isCurrentSessionSaved)
-final isCurrentSessionSavedProvider = IsCurrentSessionSavedProvider._();
-
-final class IsCurrentSessionSavedProvider
-    extends $FunctionalProvider<bool, bool, bool>
-    with $Provider<bool> {
-  IsCurrentSessionSavedProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'isCurrentSessionSavedProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$isCurrentSessionSavedHash();
-
-  @$internal
-  @override
-  $ProviderElement<bool> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
-
-  @override
-  bool create(Ref ref) {
-    return isCurrentSessionSaved(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(bool value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<bool>(value),
-    );
-  }
-}
-
-String _$isCurrentSessionSavedHash() =>
-    r'2cc65e450dd97c98a03bf4df6d249057b11a7d15';

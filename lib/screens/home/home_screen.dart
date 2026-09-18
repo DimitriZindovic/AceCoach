@@ -8,13 +8,11 @@ import '../../constants/app_spacing.dart';
 import '../../constants/app_themes.dart';
 import '../../models/training_session.dart';
 import '../../providers/auth_provider.dart';
-import '../../providers/session_provider.dart';
+import '../../providers/session_history_provider.dart';
 import '../../providers/weather_provider.dart';
 import '../../router/app_router.dart';
-import '../../widgets/loading_overlay.dart';
 import '../../widgets/session_card.dart';
 import '../../widgets/weather_chip.dart';
-import '../history/session_detail_screen.dart';
 import '../session_setup/session_setup_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -33,7 +31,7 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(currentUserProvider);
+    final user = ref.watch(authStateProvider).value;
     final weather = ref.watch(currentWeatherProvider);
     final history = ref.watch(sessionHistoryProvider);
     final scheme = Theme.of(context).colorScheme;
@@ -122,27 +120,29 @@ class HomeScreen extends ConsumerWidget {
                   _NewSessionCard(
                     onTap: () => context.go(SessionSetupScreen.routePath),
                   ),
-                  const SizedBox(height: AppSpacing.section),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.baseline,
-                    textBaseline: TextBaseline.alphabetic,
-                    children: [
-                      Text('Recent sessions', style: text.titleSmall),
-                      TextButton(
-                        onPressed: () => context.goNamed(AppRoutes.history),
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.sm,
+                  if (history.value?.isNotEmpty ?? false) ...[
+                    const SizedBox(height: AppSpacing.section),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Text('Recent sessions', style: text.titleSmall),
+                        TextButton(
+                          onPressed: () => context.goNamed(AppRoutes.history),
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.sm,
+                            ),
+                            visualDensity: VisualDensity.compact,
                           ),
-                          visualDensity: VisualDensity.compact,
+                          child: const Text('See all'),
                         ),
-                        child: const Text('See all'),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  _RecentSessions(history: history),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    _RecentSessions(history: history),
+                  ],
                 ],
               ),
             ),
@@ -269,74 +269,11 @@ class _RecentSessions extends StatelessWidget {
           clipBehavior: Clip.none,
           itemCount: value.length.clamp(0, 5),
           separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.md),
-          itemBuilder: (context, index) => RecentSessionCard(
-            session: value[index],
-            onTap: () => context.pushNamed(
-              AppRoutes.sessionDetail,
-              pathParameters: {
-                SessionDetailScreen.sessionIdParameter: value[index].id,
-              },
-            ),
-          ),
+          itemBuilder: (context, index) =>
+              RecentSessionCard(session: value[index]),
         ),
-        AsyncValue(:final value?) when value.isEmpty => const _RecentEmpty(),
-        AsyncValue(hasError: true) => const _RecentEmpty(
-          message: 'Your history could not be loaded.',
-        ),
-        _ => ListView(
-          scrollDirection: Axis.horizontal,
-          clipBehavior: Clip.none,
-          physics: const NeverScrollableScrollPhysics(),
-          children: const [
-            SkeletonBox(
-              width: RecentSessionCard.width,
-              height: _height,
-              radius: AppRadius.xl,
-            ),
-            SizedBox(width: AppSpacing.md),
-            SkeletonBox(
-              width: RecentSessionCard.width,
-              height: _height,
-              radius: AppRadius.xl,
-            ),
-          ],
-        ),
+        _ => const SizedBox.shrink(),
       },
-    );
-  }
-}
-
-class _RecentEmpty extends StatelessWidget {
-  const _RecentEmpty({
-    this.message =
-        'Your generated sessions will appear here once you save one.',
-  });
-
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainer,
-        borderRadius: AppRadius.circular(AppRadius.xl),
-        border: Border.all(color: scheme.outlineVariant),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.sports_tennis_rounded, color: scheme.onSurfaceVariant),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            message,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.caption,
-          ),
-        ],
-      ),
     );
   }
 }

@@ -1,112 +1,67 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
-import 'package:drift/drift.dart';
-import 'package:drift_flutter/drift_flutter.dart';
+import 'package:path_provider/path_provider.dart';
 
-import '../models/exercise.dart';
-import '../models/session_params.dart';
 import '../models/training_session.dart';
-import '../models/weather.dart';
 
-part 'local_database_service.g.dart';
+class LocalDatabaseService {
+  final StreamController<void> _changes = StreamController<void>.broadcast();
 
-class Sessions extends Table {
-  TextColumn get id => text()();
-  TextColumn get userId => text()();
-  TextColumn get title => text()();
-  TextColumn get summary => text()();
-  DateTimeColumn get createdAt => dateTime()();
-  DateTimeColumn get completedAt => dateTime().nullable()();
-  TextColumn get paramsJson => text()();
-  TextColumn get exercisesJson => text()();
-  TextColumn get weatherJson => text().nullable()();
-  BoolColumn get weatherUsed => boolean().withDefault(const Constant(false))();
-  TextColumn get weatherAdvice => text().nullable()();
+  List<TrainingSession>? _cache;
 
-  @override
-  Set<Column> get primaryKey => {id};
-}
+  Future<void> close() => _changes.close();
 
-@DriftDatabase(tables: [Sessions])
-class LocalDatabaseService extends _$LocalDatabaseService {
-  LocalDatabaseService([QueryExecutor? executor])
-    : super(executor ?? driftDatabase(name: 'acecoach'));
-
-  @override
-  int get schemaVersion => 3;
-
-  @override
-  MigrationStrategy get migration =>
-      MigrationStrategy(onUpgrade: (m, from, to) => m.createAll());
-
-  Stream<List<TrainingSession>> watchSessions(String userId) {
-    final query = select(sessions)
-      ..where((s) => s.userId.equals(userId))
-      ..orderBy([(s) => OrderingTerm.desc(s.createdAt)]);
-    return query.watch().map((rows) => rows.map(_toSession).toList());
+  Stream<List<TrainingSession>> watchSessions(String userId) async* {
+    yield await _sessionsOf(userId);
+    await for (final _ in _changes.stream) {
+      yield await _sessionsOf(userId);
+    }
   }
 
-  Future<void> insertSession(TrainingSession session) =>
-      into(sessions).insertOnConflictUpdate(_toRow(session));
-
-  Future<TrainingSession?> findSession(String id) async {
-    final row = await (select(
-      sessions,
-    )..where((s) => s.id.equals(id))).getSingleOrNull();
-    return row == null ? null : _toSession(row);
+  Future<void> insertSession(TrainingSession session) async {
+    final sessions = await _read();
+    await _write([
+      ...sessions.where((s) => s.id != session.id),
+      session,
+    ]);
   }
 
-  Future<void> deleteSession(String id) =>
-      (delete(sessions)..where((s) => s.id.equals(id))).go();
+  Future<List<TrainingSession>> _sessionsOf(String userId) async {
+    final sessions = await _read();
+    return sessions.where((s) => s.userId == userId).toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+  }
 
-  Future<void> setCompleted(String id, DateTime? completedAt) {
-    return (update(sessions)..where((s) => s.id.equals(id))).write(
-      SessionsCompanion(completedAt: Value(completedAt)),
+  Future<File> _file() async {
+    final directory = await getApplicationDocumentsDirectory();
+    return File('${directory.path}/sessions.json');
+  }
+
+  Future<List<TrainingSession>> _read() async {
+    final cached = _cache;
+    if (cached != null) return cached;
+
+    final file = await _file();
+    if (!file.existsSync()) return _cache = const [];
+    try {
+      final raw = jsonDecode(await file.readAsString()) as List;
+      return _cache = [
+        for (final item in raw)
+          TrainingSession.fromJson(item as Map<String, dynamic>),
+      ];
+    } on Object {
+      return _cache = const [];
+    }
+  }
+
+  Future<void> _write(List<TrainingSession> sessions) async {
+    _cache = sessions;
+    final file = await _file();
+    await file.writeAsString(
+      jsonEncode([for (final session in sessions) session.toJson()]),
     );
-  }
-
-  SessionsCompanion _toRow(TrainingSession session) {
-    return SessionsCompanion.insert(
-      id: session.id,
-      userId: session.userId,
-      title: session.title,
-      summary: session.summary,
-      createdAt: session.createdAt,
-      completedAt: Value(session.completedAt),
-      paramsJson: jsonEncode(session.params.toJson()),
-      exercisesJson: jsonEncode([
-        for (final exercise in session.exercises) exercise.toJson(),
-      ]),
-      weatherJson: Value(
-        session.weather == null ? null : jsonEncode(session.weather!.toJson()),
-      ),
-      weatherUsed: Value(session.weatherUsed),
-      weatherAdvice: Value(session.weatherAdvice),
-    );
-  }
-
-  TrainingSession _toSession(Session row) {
-    return TrainingSession(
-      id: row.id,
-      userId: row.userId,
-      title: row.title,
-      summary: row.summary,
-      createdAt: row.createdAt,
-      completedAt: row.completedAt,
-      params: SessionParams.fromJson(
-        jsonDecode(row.paramsJson) as Map<String, dynamic>,
-      ),
-      exercises: [
-        for (final raw in jsonDecode(row.exercisesJson) as List)
-          Exercise.fromJson(raw as Map<String, dynamic>),
-      ],
-      weatherUsed: row.weatherUsed,
-      weatherAdvice: row.weatherAdvice,
-      weather: row.weatherJson == null
-          ? null
-          : Weather.fromJson(
-              jsonDecode(row.weatherJson!) as Map<String, dynamic>,
-            ),
-    );
+    _changes.add(null);
   }
 }

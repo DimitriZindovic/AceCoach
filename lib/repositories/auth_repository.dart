@@ -49,9 +49,6 @@ class AuthRepository {
     });
   }
 
-  Future<void> sendPasswordReset(String email) =>
-      _guard(() => _require().sendPasswordReset(email.trim()));
-
   Future<void> signOut() => _guard(() => _require().signOut());
 
   AuthService _require() {

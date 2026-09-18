@@ -78,19 +78,6 @@ class SessionCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(width: AppSpacing.sm),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    _StatusBadge(completed: session.isCompleted),
-                    const SizedBox(height: AppSpacing.xs),
-                    const Icon(
-                      Icons.chevron_right_rounded,
-                      size: 18,
-                      color: AppColors.chevron,
-                    ),
-                  ],
-                ),
               ],
             ),
           ),
@@ -204,39 +191,6 @@ class _SessionIconBox extends StatelessWidget {
         Icons.sports_tennis_rounded,
         size: size * 0.5,
         color: AppColors.primaryDark,
-      ),
-    );
-  }
-}
-
-class _StatusBadge extends StatelessWidget {
-  const _StatusBadge({required this.completed});
-
-  final bool completed;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final (background, foreground) = completed
-        ? (AppColors.primaryContainer, AppColors.primaryDark)
-        : (scheme.surfaceContainer, scheme.onSurfaceVariant);
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: 4,
-      ),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: AppRadius.circular(AppRadius.xs),
-      ),
-      child: Text(
-        completed ? 'DONE' : 'PLANNED',
-        style: Theme.of(context).textTheme.badge.copyWith(
-          fontSize: 9,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.4,
-          color: foreground,
-        ),
       ),
     );
   }

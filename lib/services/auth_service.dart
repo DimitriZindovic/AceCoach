@@ -30,8 +30,5 @@ class AuthService {
     return credential;
   }
 
-  Future<void> sendPasswordReset(String email) =>
-      _auth.sendPasswordResetEmail(email: email);
-
   Future<void> signOut() => _auth.signOut();
 }

@@ -66,12 +66,6 @@ class SessionRepository {
   Stream<List<TrainingSession>> watchHistory(String userId) =>
       _database.watchSessions(userId);
 
-  Future<TrainingSession?> find(String id) => _database.findSession(id);
-
-  Future<void> delete(String id) => _database.deleteSession(id);
-
-  Future<void> setCompleted(String id, {required bool completed}) =>
-      _database.setCompleted(id, completed ? _now() : null);
 
   bool _isConsistent(AiSessionDraft draft, SessionParams params) {
     return TrainingSession.isDurationConsistent(

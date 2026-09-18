@@ -25,13 +25,25 @@ class LocationService {
       throw const AppException('Location access was denied.');
     }
 
+    Position? lastKnown;
     try {
-      final lastKnown = await Geolocator.getLastKnownPosition();
-      final position = lastKnown != null && _isFresh(lastKnown)
-          ? lastKnown
-          : await Geolocator.getCurrentPosition(locationSettings: _settings);
+      lastKnown = await Geolocator.getLastKnownPosition();
+    } on Object catch (_) {
+      lastKnown = null;
+    }
+    if (lastKnown != null && _isFresh(lastKnown)) {
+      return (latitude: lastKnown.latitude, longitude: lastKnown.longitude);
+    }
+
+    try {
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: _settings,
+      );
       return (latitude: position.latitude, longitude: position.longitude);
-    } catch (_) {
+    } on Object catch (_) {
+      if (lastKnown != null) {
+        return (latitude: lastKnown.latitude, longitude: lastKnown.longitude);
+      }
       throw const AppException('Could not read your location.');
     }
   }
