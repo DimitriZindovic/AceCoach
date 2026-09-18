@@ -32,12 +32,6 @@ abstract final class AppColors {
   static const Color error = Color(0xFFC62828);
   static const Color errorContainer = Color(0xFFFFCDD2);
 
-  static const Color darkBackground = ink;
-  static const Color darkSurface = Color(0xFF171C19);
-  static const Color darkSurfaceMuted = Color(0xFF1F2521);
-  static const Color darkHairline = Color(0xFF242A26);
-  static const Color darkOutline = Color(0xFF2E352F);
-
   static const LinearGradient splashGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,

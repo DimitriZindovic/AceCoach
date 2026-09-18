@@ -5,11 +5,9 @@ import 'app_colors.dart';
 import 'app_spacing.dart';
 
 abstract final class AppThemes {
-  static ThemeData get light => _build(_lightScheme, Brightness.light);
+  static ThemeData get light => _build();
 
-  static ThemeData get dark => _build(_darkScheme, Brightness.dark);
-
-  static const ColorScheme _lightScheme = ColorScheme(
+  static const ColorScheme _scheme = ColorScheme(
     brightness: Brightness.light,
     primary: AppColors.primary,
     onPrimary: AppColors.surface,
@@ -42,51 +40,15 @@ abstract final class AppThemes {
     scrim: AppColors.ink,
   );
 
-  static const ColorScheme _darkScheme = ColorScheme(
-    brightness: Brightness.dark,
-    primary: AppColors.primary,
-    onPrimary: AppColors.surface,
-    primaryContainer: AppColors.primaryDeep,
-    onPrimaryContainer: AppColors.primaryContainer,
-    secondary: AppColors.lime,
-    onSecondary: AppColors.primaryDeep,
-    secondaryContainer: AppColors.lime,
-    onSecondaryContainer: AppColors.primaryDeep,
-    tertiary: AppColors.lime,
-    onTertiary: AppColors.ink,
-    error: AppColors.errorContainer,
-    onError: AppColors.error,
-    errorContainer: AppColors.error,
-    onErrorContainer: AppColors.errorContainer,
-    surface: AppColors.darkSurface,
-    onSurface: AppColors.background,
-    onSurfaceVariant: AppColors.textDisabled,
-    surfaceContainerLowest: AppColors.darkBackground,
-    surfaceContainerLow: AppColors.darkBackground,
-    surfaceContainer: AppColors.darkSurfaceMuted,
-    surfaceContainerHigh: AppColors.darkSurfaceMuted,
-    surfaceContainerHighest: AppColors.darkOutline,
-    outline: AppColors.darkOutline,
-    outlineVariant: AppColors.darkHairline,
-    inverseSurface: AppColors.background,
-    onInverseSurface: AppColors.ink,
-    inversePrimary: AppColors.primaryDark,
-    shadow: AppColors.ink,
-    scrim: AppColors.ink,
-  );
-
-  static ThemeData _build(ColorScheme scheme, Brightness brightness) {
-    final isDark = brightness == Brightness.dark;
+  static ThemeData _build() {
+    const scheme = _scheme;
     final textTheme = _textTheme(scheme.onSurface, scheme.onSurfaceVariant);
-    final scaffoldBackground = isDark
-        ? AppColors.darkBackground
-        : AppColors.background;
 
     return ThemeData(
       useMaterial3: true,
-      brightness: brightness,
+      brightness: Brightness.light,
       colorScheme: scheme,
-      scaffoldBackgroundColor: scaffoldBackground,
+      scaffoldBackgroundColor: AppColors.background,
       textTheme: textTheme,
       splashFactory: InkSparkle.splashFactory,
       visualDensity: VisualDensity.standard,
@@ -121,7 +83,7 @@ abstract final class AppThemes {
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: isDark ? AppColors.lime : AppColors.primaryDark,
+          foregroundColor: AppColors.primaryDark,
           minimumSize: const Size.fromHeight(AppSizes.buttonHeight),
           side: const BorderSide(color: AppColors.primary, width: 1.5),
           shape: RoundedRectangleBorder(
@@ -132,7 +94,7 @@ abstract final class AppThemes {
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: isDark ? AppColors.lime : AppColors.primaryDark,
+          foregroundColor: AppColors.primaryDark,
           minimumSize: const Size(AppSizes.minTapTarget, AppSizes.minTapTarget),
           textStyle: textTheme.labelMedium,
         ),
@@ -203,18 +165,14 @@ abstract final class AppThemes {
           final selected = states.contains(WidgetState.selected);
           return textTheme.labelSmall?.copyWith(
             fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-            color: selected
-                ? (isDark ? AppColors.lime : AppColors.primaryDark)
-                : AppColors.textTertiary,
+            color: selected ? AppColors.primaryDark : AppColors.textTertiary,
           );
         }),
         iconTheme: WidgetStateProperty.resolveWith((states) {
           final selected = states.contains(WidgetState.selected);
           return IconThemeData(
             size: 22,
-            color: selected
-                ? (isDark ? AppColors.lime : AppColors.primaryDark)
-                : AppColors.textTertiary,
+            color: selected ? AppColors.primaryDark : AppColors.textTertiary,
           );
         }),
       ),
