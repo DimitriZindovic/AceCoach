@@ -20,11 +20,7 @@ IconData weatherIcon(Weather weather) {
 }
 
 class WeatherChip extends StatelessWidget {
-  const WeatherChip({
-    super.key,
-    required this.weather,
-    this.onRetry,
-  });
+  const WeatherChip({super.key, required this.weather, this.onRetry});
 
   final AsyncValue<Weather> weather;
   final VoidCallback? onRetry;

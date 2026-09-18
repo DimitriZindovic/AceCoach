@@ -34,11 +34,9 @@ class PrimaryButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final foreground = switch (variant) {
       AppButtonVariant.primary => scheme.onPrimary,
-      AppButtonVariant.outline =>
-        isDark ? AppColors.lime : AppColors.primaryDark,
+      AppButtonVariant.outline => AppColors.primaryDark,
       AppButtonVariant.neutral => scheme.onSurface,
       AppButtonVariant.destructive => AppColors.error,
     };

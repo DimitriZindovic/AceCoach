@@ -5,7 +5,6 @@ import '../constants/app_colors.dart';
 import '../constants/app_spacing.dart';
 import '../constants/app_themes.dart';
 import '../models/training_session.dart';
-import 'goal_selector.dart';
 
 String relativeDayLabel(DateTime date, {DateTime? now}) {
   final today = DateUtils.dateOnly(now ?? DateTime.now());
@@ -51,7 +50,7 @@ class SessionCard extends StatelessWidget {
             ),
             child: Row(
               children: [
-                _GoalIconBox(session: session, size: AppSizes.iconBoxMedium),
+                const _SessionIconBox(size: AppSizes.iconBoxMedium),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
@@ -113,7 +112,6 @@ class RecentSessionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Semantics(
       button: onTap != null,
@@ -139,10 +137,7 @@ class RecentSessionCard extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _GoalIconBox(
-                        session: session,
-                        size: AppSizes.iconBoxSmall,
-                      ),
+                      const _SessionIconBox(size: AppSizes.iconBoxSmall),
                       Text(
                         relativeDayLabel(session.createdAt),
                         style: text.badge.copyWith(
@@ -174,9 +169,7 @@ class RecentSessionCard extends StatelessWidget {
                       ),
                       _Tag(
                         label: session.params.level.label,
-                        background: isDark
-                            ? AppColors.darkSurfaceMuted
-                            : AppColors.surfaceMuted,
+                        background: AppColors.surfaceMuted,
                         foreground: scheme.onSurfaceVariant,
                       ),
                     ],
@@ -191,28 +184,26 @@ class RecentSessionCard extends StatelessWidget {
   }
 }
 
-class _GoalIconBox extends StatelessWidget {
-  const _GoalIconBox({required this.session, required this.size});
+class _SessionIconBox extends StatelessWidget {
+  const _SessionIconBox({required this.size});
 
-  final TrainingSession session;
   final double size;
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: isDark ? AppColors.primaryDeep : AppColors.primaryContainer,
+        color: AppColors.primaryContainer,
         borderRadius: AppRadius.circular(
           size >= AppSizes.iconBoxMedium ? AppRadius.md - 2 : AppRadius.sm,
         ),
       ),
       child: Icon(
-        goalIcon(session.params.goal),
+        Icons.sports_tennis_rounded,
         size: size * 0.5,
-        color: isDark ? AppColors.lime : AppColors.primaryDark,
+        color: AppColors.primaryDark,
       ),
     );
   }
@@ -226,12 +217,8 @@ class _StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final (background, foreground) = completed
-        ? (
-            isDark ? AppColors.primaryDeep : AppColors.primaryContainer,
-            isDark ? AppColors.lime : AppColors.primaryDark,
-          )
+        ? (AppColors.primaryContainer, AppColors.primaryDark)
         : (scheme.surfaceContainer, scheme.onSurfaceVariant);
     return Container(
       padding: const EdgeInsets.symmetric(

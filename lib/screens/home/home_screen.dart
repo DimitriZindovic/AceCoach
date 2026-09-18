@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../constants/app_colors.dart';
@@ -9,14 +10,12 @@ import '../../models/training_session.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/session_provider.dart';
 import '../../providers/weather_provider.dart';
+import '../../router/app_router.dart';
 import '../../widgets/loading_overlay.dart';
 import '../../widgets/session_card.dart';
 import '../../widgets/weather_chip.dart';
-
-void _notHereYet(BuildContext context, String screen) {
-  ScaffoldMessenger.of(context)
-      .showSnackBar(SnackBar(content: Text('$screen is not built yet.')));
-}
+import '../history/session_detail_screen.dart';
+import '../session_setup/session_setup_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -99,12 +98,7 @@ class HomeScreen extends ConsumerWidget {
                           ),
                         ),
                         const SizedBox(width: AppSpacing.md),
-                        _SignOutAvatar(
-                          initials: user?.initials ?? '?',
-                          onSignOut: () => ref
-                              .read(authControllerProvider.notifier)
-                              .signOut(),
-                        ),
+                        _Avatar(initials: user?.initials ?? '?'),
                       ],
                     ),
                     const SizedBox(height: AppSpacing.lg),
@@ -126,7 +120,7 @@ class HomeScreen extends ConsumerWidget {
               sliver: SliverList.list(
                 children: [
                   _NewSessionCard(
-                    onTap: () => _notHereYet(context, 'Session setup'),
+                    onTap: () => context.go(SessionSetupScreen.routePath),
                   ),
                   const SizedBox(height: AppSpacing.section),
                   Row(
@@ -136,7 +130,7 @@ class HomeScreen extends ConsumerWidget {
                     children: [
                       Text('Recent sessions', style: text.titleSmall),
                       TextButton(
-                        onPressed: () => _notHereYet(context, 'History'),
+                        onPressed: () => context.goNamed(AppRoutes.history),
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
                             horizontal: AppSpacing.sm,
@@ -154,26 +148,6 @@ class HomeScreen extends ConsumerWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _SignOutAvatar extends StatelessWidget {
-  const _SignOutAvatar({required this.initials, required this.onSignOut});
-
-  final String initials;
-  final VoidCallback onSignOut;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: 'Sign out',
-      child: InkWell(
-        onTap: onSignOut,
-        customBorder: const CircleBorder(),
-        child: _Avatar(initials: initials),
       ),
     );
   }
@@ -297,7 +271,12 @@ class _RecentSessions extends StatelessWidget {
           separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.md),
           itemBuilder: (context, index) => RecentSessionCard(
             session: value[index],
-            onTap: () => _notHereYet(context, 'Session detail'),
+            onTap: () => context.pushNamed(
+              AppRoutes.sessionDetail,
+              pathParameters: {
+                SessionDetailScreen.sessionIdParameter: value[index].id,
+              },
+            ),
           ),
         ),
         AsyncValue(:final value?) when value.isEmpty => const _RecentEmpty(),

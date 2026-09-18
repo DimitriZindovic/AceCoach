@@ -107,7 +107,6 @@ class _SkeletonBoxState extends State<SkeletonBox>
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return ExcludeSemantics(
       child: FadeTransition(
         opacity: Tween<double>(begin: 0.45, end: 1).animate(
@@ -117,7 +116,7 @@ class _SkeletonBoxState extends State<SkeletonBox>
           width: widget.width,
           height: widget.height,
           decoration: BoxDecoration(
-            color: isDark ? AppColors.darkSurfaceMuted : AppColors.hairline,
+            color: AppColors.hairline,
             borderRadius: AppRadius.circular(widget.radius),
           ),
         ),

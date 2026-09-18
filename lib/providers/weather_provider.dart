@@ -45,7 +45,9 @@ WeatherRepository weatherRepository(Ref ref) {
 
 @Riverpod(keepAlive: true)
 Future<Weather> currentWeather(Ref ref) async {
-  final weather = await ref.watch(weatherRepositoryProvider).getCurrentWeather();
+  final weather = await ref
+      .watch(weatherRepositoryProvider)
+      .getCurrentWeather();
 
   final timer = Timer(ApiConstants.weatherCacheDuration, ref.invalidateSelf);
   ref.onDispose(timer.cancel);

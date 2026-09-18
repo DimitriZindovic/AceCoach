@@ -1,39 +1,4 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
-
-import '../constants/app_colors.dart';
-import '../constants/app_spacing.dart';
-
-class AppLogo extends StatelessWidget {
-  const AppLogo({
-    super.key,
-    this.size = 62,
-    this.strokeColor = AppColors.surface,
-    this.ballColor = AppColors.lime,
-    this.seamColor = AppColors.primaryDark,
-  });
-
-  final double size;
-  final Color strokeColor;
-  final Color ballColor;
-  final Color seamColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      label: 'AceCoach logo',
-      child: CustomPaint(
-        size: Size.square(size),
-        painter: _LogoPainter(
-          strokeColor: strokeColor,
-          ballColor: ballColor,
-          seamColor: seamColor,
-        ),
-      ),
-    );
-  }
-}
 
 class AppLogoBadge extends StatelessWidget {
   const AppLogoBadge({super.key, this.size = 48});
@@ -42,79 +7,11 @@ class AppLogoBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return Image.asset(
+      'assets/icons/logo_badge.png',
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        color: AppColors.primaryContainer,
-        borderRadius: AppRadius.circular(AppRadius.lg),
-      ),
-      alignment: Alignment.center,
-      child: AppLogo(size: size * 0.54, strokeColor: AppColors.primaryDark),
+      semanticLabel: 'AceCoach logo',
     );
   }
-}
-
-class _LogoPainter extends CustomPainter {
-  const _LogoPainter({
-    required this.strokeColor,
-    required this.ballColor,
-    required this.seamColor,
-  });
-
-  final Color strokeColor;
-  final Color ballColor;
-  final Color seamColor;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final scale = size.width / 64;
-    canvas.scale(scale);
-
-    final stroke = Paint()
-      ..color = strokeColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3
-      ..strokeCap = StrokeCap.round;
-
-    canvas
-      ..save()
-      ..translate(24, 22)
-      ..rotate(-28 * math.pi / 180)
-      ..drawOval(
-        Rect.fromCenter(center: Offset.zero, width: 30, height: 36),
-        stroke,
-      )
-      ..restore();
-
-    canvas
-      ..drawLine(const Offset(14, 34), const Offset(8, 52), stroke)
-      ..drawLine(const Offset(6, 56), const Offset(11, 50), stroke);
-
-    canvas.drawCircle(const Offset(47, 45), 10, Paint()..color = ballColor);
-    final seam = Paint()
-      ..color = seamColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2
-      ..strokeCap = StrokeCap.round;
-    canvas
-      ..drawPath(
-        Path()
-          ..moveTo(40, 39)
-          ..quadraticBezierTo(47, 45, 40, 51),
-        seam,
-      )
-      ..drawPath(
-        Path()
-          ..moveTo(54, 39)
-          ..quadraticBezierTo(47, 45, 54, 51),
-        seam,
-      );
-  }
-
-  @override
-  bool shouldRepaint(covariant _LogoPainter oldDelegate) =>
-      oldDelegate.strokeColor != strokeColor ||
-      oldDelegate.ballColor != ballColor ||
-      oldDelegate.seamColor != seamColor;
 }

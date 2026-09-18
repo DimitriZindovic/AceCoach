@@ -26,15 +26,10 @@ class EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final boxColor = isError
-        ? (isDark
-              ? AppColors.error.withValues(alpha: 0.25)
-              : AppColors.errorContainer)
-        : (isDark ? AppColors.primaryDeep : AppColors.primaryContainer);
-    final iconColor = isError
-        ? (isDark ? AppColors.errorContainer : AppColors.error)
-        : (isDark ? AppColors.lime : AppColors.primaryDark);
+        ? AppColors.errorContainer
+        : AppColors.primaryContainer;
+    final iconColor = isError ? AppColors.error : AppColors.primaryDark;
 
     return Center(
       child: Padding(
