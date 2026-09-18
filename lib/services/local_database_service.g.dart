@@ -101,6 +101,32 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _weatherUsedMeta = const VerificationMeta(
+    'weatherUsed',
+  );
+  @override
+  late final GeneratedColumn<bool> weatherUsed = GeneratedColumn<bool>(
+    'weather_used',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("weather_used" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _weatherAdviceMeta = const VerificationMeta(
+    'weatherAdvice',
+  );
+  @override
+  late final GeneratedColumn<String> weatherAdvice = GeneratedColumn<String>(
+    'weather_advice',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -112,6 +138,8 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
     paramsJson,
     exercisesJson,
     weatherJson,
+    weatherUsed,
+    weatherAdvice,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -199,6 +227,24 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
         ),
       );
     }
+    if (data.containsKey('weather_used')) {
+      context.handle(
+        _weatherUsedMeta,
+        weatherUsed.isAcceptableOrUnknown(
+          data['weather_used']!,
+          _weatherUsedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('weather_advice')) {
+      context.handle(
+        _weatherAdviceMeta,
+        weatherAdvice.isAcceptableOrUnknown(
+          data['weather_advice']!,
+          _weatherAdviceMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -244,6 +290,14 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
         DriftSqlType.string,
         data['${effectivePrefix}weather_json'],
       ),
+      weatherUsed: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}weather_used'],
+      )!,
+      weatherAdvice: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}weather_advice'],
+      ),
     );
   }
 
@@ -263,6 +317,8 @@ class Session extends DataClass implements Insertable<Session> {
   final String paramsJson;
   final String exercisesJson;
   final String? weatherJson;
+  final bool weatherUsed;
+  final String? weatherAdvice;
   const Session({
     required this.id,
     required this.userId,
@@ -273,6 +329,8 @@ class Session extends DataClass implements Insertable<Session> {
     required this.paramsJson,
     required this.exercisesJson,
     this.weatherJson,
+    required this.weatherUsed,
+    this.weatherAdvice,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -289,6 +347,10 @@ class Session extends DataClass implements Insertable<Session> {
     map['exercises_json'] = Variable<String>(exercisesJson);
     if (!nullToAbsent || weatherJson != null) {
       map['weather_json'] = Variable<String>(weatherJson);
+    }
+    map['weather_used'] = Variable<bool>(weatherUsed);
+    if (!nullToAbsent || weatherAdvice != null) {
+      map['weather_advice'] = Variable<String>(weatherAdvice);
     }
     return map;
   }
@@ -308,6 +370,10 @@ class Session extends DataClass implements Insertable<Session> {
       weatherJson: weatherJson == null && nullToAbsent
           ? const Value.absent()
           : Value(weatherJson),
+      weatherUsed: Value(weatherUsed),
+      weatherAdvice: weatherAdvice == null && nullToAbsent
+          ? const Value.absent()
+          : Value(weatherAdvice),
     );
   }
 
@@ -326,6 +392,8 @@ class Session extends DataClass implements Insertable<Session> {
       paramsJson: serializer.fromJson<String>(json['paramsJson']),
       exercisesJson: serializer.fromJson<String>(json['exercisesJson']),
       weatherJson: serializer.fromJson<String?>(json['weatherJson']),
+      weatherUsed: serializer.fromJson<bool>(json['weatherUsed']),
+      weatherAdvice: serializer.fromJson<String?>(json['weatherAdvice']),
     );
   }
   @override
@@ -341,6 +409,8 @@ class Session extends DataClass implements Insertable<Session> {
       'paramsJson': serializer.toJson<String>(paramsJson),
       'exercisesJson': serializer.toJson<String>(exercisesJson),
       'weatherJson': serializer.toJson<String?>(weatherJson),
+      'weatherUsed': serializer.toJson<bool>(weatherUsed),
+      'weatherAdvice': serializer.toJson<String?>(weatherAdvice),
     };
   }
 
@@ -354,6 +424,8 @@ class Session extends DataClass implements Insertable<Session> {
     String? paramsJson,
     String? exercisesJson,
     Value<String?> weatherJson = const Value.absent(),
+    bool? weatherUsed,
+    Value<String?> weatherAdvice = const Value.absent(),
   }) => Session(
     id: id ?? this.id,
     userId: userId ?? this.userId,
@@ -364,6 +436,10 @@ class Session extends DataClass implements Insertable<Session> {
     paramsJson: paramsJson ?? this.paramsJson,
     exercisesJson: exercisesJson ?? this.exercisesJson,
     weatherJson: weatherJson.present ? weatherJson.value : this.weatherJson,
+    weatherUsed: weatherUsed ?? this.weatherUsed,
+    weatherAdvice: weatherAdvice.present
+        ? weatherAdvice.value
+        : this.weatherAdvice,
   );
   Session copyWithCompanion(SessionsCompanion data) {
     return Session(
@@ -384,6 +460,12 @@ class Session extends DataClass implements Insertable<Session> {
       weatherJson: data.weatherJson.present
           ? data.weatherJson.value
           : this.weatherJson,
+      weatherUsed: data.weatherUsed.present
+          ? data.weatherUsed.value
+          : this.weatherUsed,
+      weatherAdvice: data.weatherAdvice.present
+          ? data.weatherAdvice.value
+          : this.weatherAdvice,
     );
   }
 
@@ -398,7 +480,9 @@ class Session extends DataClass implements Insertable<Session> {
           ..write('completedAt: $completedAt, ')
           ..write('paramsJson: $paramsJson, ')
           ..write('exercisesJson: $exercisesJson, ')
-          ..write('weatherJson: $weatherJson')
+          ..write('weatherJson: $weatherJson, ')
+          ..write('weatherUsed: $weatherUsed, ')
+          ..write('weatherAdvice: $weatherAdvice')
           ..write(')'))
         .toString();
   }
@@ -414,6 +498,8 @@ class Session extends DataClass implements Insertable<Session> {
     paramsJson,
     exercisesJson,
     weatherJson,
+    weatherUsed,
+    weatherAdvice,
   );
   @override
   bool operator ==(Object other) =>
@@ -427,7 +513,9 @@ class Session extends DataClass implements Insertable<Session> {
           other.completedAt == this.completedAt &&
           other.paramsJson == this.paramsJson &&
           other.exercisesJson == this.exercisesJson &&
-          other.weatherJson == this.weatherJson);
+          other.weatherJson == this.weatherJson &&
+          other.weatherUsed == this.weatherUsed &&
+          other.weatherAdvice == this.weatherAdvice);
 }
 
 class SessionsCompanion extends UpdateCompanion<Session> {
@@ -440,6 +528,8 @@ class SessionsCompanion extends UpdateCompanion<Session> {
   final Value<String> paramsJson;
   final Value<String> exercisesJson;
   final Value<String?> weatherJson;
+  final Value<bool> weatherUsed;
+  final Value<String?> weatherAdvice;
   final Value<int> rowid;
   const SessionsCompanion({
     this.id = const Value.absent(),
@@ -451,6 +541,8 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     this.paramsJson = const Value.absent(),
     this.exercisesJson = const Value.absent(),
     this.weatherJson = const Value.absent(),
+    this.weatherUsed = const Value.absent(),
+    this.weatherAdvice = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   SessionsCompanion.insert({
@@ -463,6 +555,8 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     required String paramsJson,
     required String exercisesJson,
     this.weatherJson = const Value.absent(),
+    this.weatherUsed = const Value.absent(),
+    this.weatherAdvice = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        userId = Value(userId),
@@ -481,6 +575,8 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     Expression<String>? paramsJson,
     Expression<String>? exercisesJson,
     Expression<String>? weatherJson,
+    Expression<bool>? weatherUsed,
+    Expression<String>? weatherAdvice,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -493,6 +589,8 @@ class SessionsCompanion extends UpdateCompanion<Session> {
       if (paramsJson != null) 'params_json': paramsJson,
       if (exercisesJson != null) 'exercises_json': exercisesJson,
       if (weatherJson != null) 'weather_json': weatherJson,
+      if (weatherUsed != null) 'weather_used': weatherUsed,
+      if (weatherAdvice != null) 'weather_advice': weatherAdvice,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -507,6 +605,8 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     Value<String>? paramsJson,
     Value<String>? exercisesJson,
     Value<String?>? weatherJson,
+    Value<bool>? weatherUsed,
+    Value<String?>? weatherAdvice,
     Value<int>? rowid,
   }) {
     return SessionsCompanion(
@@ -519,6 +619,8 @@ class SessionsCompanion extends UpdateCompanion<Session> {
       paramsJson: paramsJson ?? this.paramsJson,
       exercisesJson: exercisesJson ?? this.exercisesJson,
       weatherJson: weatherJson ?? this.weatherJson,
+      weatherUsed: weatherUsed ?? this.weatherUsed,
+      weatherAdvice: weatherAdvice ?? this.weatherAdvice,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -553,6 +655,12 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     if (weatherJson.present) {
       map['weather_json'] = Variable<String>(weatherJson.value);
     }
+    if (weatherUsed.present) {
+      map['weather_used'] = Variable<bool>(weatherUsed.value);
+    }
+    if (weatherAdvice.present) {
+      map['weather_advice'] = Variable<String>(weatherAdvice.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -571,6 +679,8 @@ class SessionsCompanion extends UpdateCompanion<Session> {
           ..write('paramsJson: $paramsJson, ')
           ..write('exercisesJson: $exercisesJson, ')
           ..write('weatherJson: $weatherJson, ')
+          ..write('weatherUsed: $weatherUsed, ')
+          ..write('weatherAdvice: $weatherAdvice, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();

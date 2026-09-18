@@ -77,6 +77,16 @@ class Weather {
     'description': description,
   };
 
+  bool get isRainy => conditionId < 700;
+
+  bool get isStormy => conditionId < 300;
+
+  bool get isTooWindy => windSpeedMs >= 10;
+
+  bool get isTooHot => temperatureCelsius >= 34;
+
+  bool get isTooCold => temperatureCelsius <= 3;
+
   bool get isOutdoorFriendly =>
       conditionId >= 700 &&
       windSpeedMs < 10 &&
@@ -92,7 +102,15 @@ class Weather {
 
   String get temperatureLabel => '${temperatureCelsius.round()}°C';
 
-  String get label => description[0].toUpperCase() + description.substring(1);
+  String get conditionLabel =>
+      description[0].toUpperCase() + description.substring(1);
+
+  String get label => conditionLabel;
+
+  String get promptDescription =>
+      '${temperatureCelsius.round()}°C (feels like ${feelsLikeCelsius.round()}°C), '
+      '$conditionLabel, wind $windSpeedKmh km/h, humidity $humidityPercent%. '
+      'Outdoor play is ${isOutdoorFriendly ? 'suitable' : 'not recommended'}.';
 
   String get summary {
     final suffix = switch (verdict) {

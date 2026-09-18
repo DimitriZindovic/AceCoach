@@ -26,20 +26,6 @@ enum Stroke {
   };
 }
 
-enum TacticalGoal {
-  baselinePlay,
-  netPlay,
-  physical,
-  mental;
-
-  String get label => switch (this) {
-    TacticalGoal.baselinePlay => 'Baseline play',
-    TacticalGoal.netPlay => 'Net approach',
-    TacticalGoal.physical => 'Physical',
-    TacticalGoal.mental => 'Mental',
-  };
-}
-
 enum PlayerCount {
   alone,
   withPartner,
@@ -54,10 +40,9 @@ enum PlayerCount {
 
 class SessionParams {
   const SessionParams({
-    this.durationMinutes = 60,
+    this.durationMinutes = defaultDuration,
     this.level = SkillLevel.intermediate,
     this.strokes = const <Stroke>{},
-    this.goal = TacticalGoal.baselinePlay,
     this.players = PlayerCount.withPartner,
     this.preferIndoor = false,
   });
@@ -65,9 +50,45 @@ class SessionParams {
   final int durationMinutes;
   final SkillLevel level;
   final Set<Stroke> strokes;
-  final TacticalGoal goal;
   final PlayerCount players;
   final bool preferIndoor;
+
+  static const int minDuration = 30;
+  static const int maxDuration = 120;
+  static const int durationStep = 15;
+  static const int defaultDuration = 60;
+
+  SessionParams copyWith({
+    int? durationMinutes,
+    SkillLevel? level,
+    Set<Stroke>? strokes,
+    PlayerCount? players,
+    bool? preferIndoor,
+  }) {
+    return SessionParams(
+      durationMinutes: durationMinutes ?? this.durationMinutes,
+      level: level ?? this.level,
+      strokes: strokes ?? this.strokes,
+      players: players ?? this.players,
+      preferIndoor: preferIndoor ?? this.preferIndoor,
+    );
+  }
+
+  static int get durationDivisions =>
+      (maxDuration - minDuration) ~/ durationStep;
+
+  bool get isValid => strokes.isNotEmpty && isDurationValid(durationMinutes);
+
+  static bool isDurationValid(int minutes) =>
+      minutes >= minDuration &&
+      minutes <= maxDuration &&
+      (minutes - minDuration) % durationStep == 0;
+
+  static int snapDuration(num minutes) {
+    final steps = ((minutes - minDuration) / durationStep).round();
+    final snapped = minDuration + steps * durationStep;
+    return snapped.clamp(minDuration, maxDuration);
+  }
 
   factory SessionParams.fromJson(Map<String, dynamic> json) => SessionParams(
     durationMinutes: (json['duration'] as num).toInt(),
@@ -76,7 +97,6 @@ class SessionParams {
       for (final name in json['strokes'] as List)
         Stroke.values.byName(name as String),
     },
-    goal: TacticalGoal.values.byName(json['goal'] as String),
     players: PlayerCount.values.byName(json['players'] as String),
     preferIndoor: json['preferIndoor'] as bool,
   );
@@ -85,7 +105,6 @@ class SessionParams {
     'duration': durationMinutes,
     'level': level.name,
     'strokes': [for (final s in orderedStrokes) s.name],
-    'goal': goal.name,
     'players': players.name,
     'preferIndoor': preferIndoor,
   };

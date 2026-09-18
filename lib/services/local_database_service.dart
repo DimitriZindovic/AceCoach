@@ -20,6 +20,8 @@ class Sessions extends Table {
   TextColumn get paramsJson => text()();
   TextColumn get exercisesJson => text()();
   TextColumn get weatherJson => text().nullable()();
+  BoolColumn get weatherUsed => boolean().withDefault(const Constant(false))();
+  TextColumn get weatherAdvice => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -31,12 +33,11 @@ class LocalDatabaseService extends _$LocalDatabaseService {
     : super(executor ?? driftDatabase(name: 'acecoach'));
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
-  MigrationStrategy get migration => MigrationStrategy(
-    onUpgrade: (m, from, to) => m.createAll(),
-  );
+  MigrationStrategy get migration =>
+      MigrationStrategy(onUpgrade: (m, from, to) => m.createAll());
 
   Stream<List<TrainingSession>> watchSessions(String userId) {
     final query = select(sessions)
@@ -47,6 +48,22 @@ class LocalDatabaseService extends _$LocalDatabaseService {
 
   Future<void> insertSession(TrainingSession session) =>
       into(sessions).insertOnConflictUpdate(_toRow(session));
+
+  Future<TrainingSession?> findSession(String id) async {
+    final row = await (select(
+      sessions,
+    )..where((s) => s.id.equals(id))).getSingleOrNull();
+    return row == null ? null : _toSession(row);
+  }
+
+  Future<void> deleteSession(String id) =>
+      (delete(sessions)..where((s) => s.id.equals(id))).go();
+
+  Future<void> setCompleted(String id, DateTime? completedAt) {
+    return (update(sessions)..where((s) => s.id.equals(id))).write(
+      SessionsCompanion(completedAt: Value(completedAt)),
+    );
+  }
 
   SessionsCompanion _toRow(TrainingSession session) {
     return SessionsCompanion.insert(
@@ -63,6 +80,8 @@ class LocalDatabaseService extends _$LocalDatabaseService {
       weatherJson: Value(
         session.weather == null ? null : jsonEncode(session.weather!.toJson()),
       ),
+      weatherUsed: Value(session.weatherUsed),
+      weatherAdvice: Value(session.weatherAdvice),
     );
   }
 
@@ -81,6 +100,8 @@ class LocalDatabaseService extends _$LocalDatabaseService {
         for (final raw in jsonDecode(row.exercisesJson) as List)
           Exercise.fromJson(raw as Map<String, dynamic>),
       ],
+      weatherUsed: row.weatherUsed,
+      weatherAdvice: row.weatherAdvice,
       weather: row.weatherJson == null
           ? null
           : Weather.fromJson(

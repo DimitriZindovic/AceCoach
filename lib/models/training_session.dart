@@ -12,6 +12,8 @@ class TrainingSession {
     required this.params,
     required this.exercises,
     this.weather,
+    this.weatherUsed = false,
+    this.weatherAdvice,
     this.completedAt,
   });
 
@@ -23,6 +25,8 @@ class TrainingSession {
   final SessionParams params;
   final List<Exercise> exercises;
   final Weather? weather;
+  final bool weatherUsed;
+  final String? weatherAdvice;
   final DateTime? completedAt;
 
   static const double durationTolerance = 0.10;
@@ -31,4 +35,20 @@ class TrainingSession {
       exercises.fold(0, (sum, e) => sum + e.estimatedDurationMinutes);
 
   bool get isCompleted => completedAt != null;
+
+  bool get hasConsistentDuration => isDurationConsistent(
+    requestedMinutes: params.durationMinutes,
+    actualMinutes: totalMinutes,
+  );
+
+  static bool isDurationConsistent({
+    required int requestedMinutes,
+    required int actualMinutes,
+  }) {
+    final tolerance = (requestedMinutes * durationTolerance).ceil();
+    return (actualMinutes - requestedMinutes).abs() <= tolerance;
+  }
+
+  String get metaLabel =>
+      '${params.durationMinutes} min · ${params.level.label} · ${params.strokesLabel}';
 }

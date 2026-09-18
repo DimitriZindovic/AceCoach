@@ -27,6 +27,8 @@ class Exercise {
   final ExercisePhase phase;
   final bool indoorFriendly;
 
+  bool get hasTip => technicalTip.trim().isNotEmpty;
+
   factory Exercise.fromJson(Map<String, dynamic> json) => Exercise(
     title: json['title'] as String,
     description: json['description'] as String,
