@@ -9,11 +9,6 @@ import 'package:path_provider/path_provider.dart';
 import '../models/training_session.dart';
 import 'session_record.dart';
 
-/// Local session store, backed by Isar.
-///
-/// The database opens lazily on first use, so nothing has to be awaited at
-/// start-up. If it cannot open — an unsupported platform, no write access —
-/// the app keeps running with an empty history instead of crashing.
 class LocalDatabaseService {
   static const String _legacyFileName = 'sessions.json';
 
@@ -67,7 +62,6 @@ class LocalDatabaseService {
     }
   }
 
-  /// Moves sessions written by the previous JSON store into Isar, once.
   Future<void> _importLegacySessions(Isar isar, Directory directory) async {
     final file = File('${directory.path}/$_legacyFileName');
     if (!file.existsSync()) return;

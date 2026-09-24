@@ -38,7 +38,6 @@ final class FirebaseReadyProvider extends $FunctionalProvider<bool, bool, bool>
     return firebaseReady(ref);
   }
 
-  /// {@macro riverpod.override_with_value}
   Override overrideWithValue(bool value) {
     return $ProviderOverride(
       origin: this,
@@ -79,7 +78,6 @@ final class AuthRepositoryProvider
     return authRepository(ref);
   }
 
-  /// {@macro riverpod.override_with_value}
   Override overrideWithValue(AuthRepository value) {
     return $ProviderOverride(
       origin: this,
@@ -147,7 +145,6 @@ final class AuthControllerProvider
   @override
   AuthController create() => AuthController();
 
-  /// {@macro riverpod.override_with_value}
   Override overrideWithValue(AsyncValue<void> value) {
     return $ProviderOverride(
       origin: this,

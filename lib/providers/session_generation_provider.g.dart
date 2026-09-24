@@ -45,7 +45,6 @@ final class SessionRepositoryProvider
     return sessionRepository(ref);
   }
 
-  /// {@macro riverpod.override_with_value}
   Override overrideWithValue(SessionRepository value) {
     return $ProviderOverride(
       origin: this,
@@ -79,7 +78,6 @@ final class SessionGenerationProvider
   @override
   SessionGeneration create() => SessionGeneration();
 
-  /// {@macro riverpod.override_with_value}
   Override overrideWithValue(SessionGenerationState value) {
     return $ProviderOverride(
       origin: this,

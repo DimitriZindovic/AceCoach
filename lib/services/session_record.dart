@@ -6,11 +6,6 @@ import '../models/training_session.dart';
 
 part 'session_record.g.dart';
 
-/// Isar row holding one [TrainingSession].
-///
-/// Only the fields queries run on are stored as columns; the rest of the
-/// session travels as a JSON payload. The domain models stay immutable and
-/// free of persistence annotations.
 @collection
 class SessionRecord {
   SessionRecord();

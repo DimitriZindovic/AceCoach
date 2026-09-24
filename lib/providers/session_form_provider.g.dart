@@ -32,7 +32,6 @@ final class SessionFormProvider
   @override
   SessionForm create() => SessionForm();
 
-  /// {@macro riverpod.override_with_value}
   Override overrideWithValue(SessionParams value) {
     return $ProviderOverride(
       origin: this,

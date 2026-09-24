@@ -39,7 +39,6 @@ final class AppRouterProvider
     return appRouter(ref);
   }
 
-  /// {@macro riverpod.override_with_value}
   Override overrideWithValue(GoRouter value) {
     return $ProviderOverride(
       origin: this,
