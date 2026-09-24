@@ -1,5 +1,5 @@
 name: ace_coach
-description: "AceCoach - login screen with Firebase authentication."
+description: "AceCoach"
 publish_to: "none"
 version: 1.0.0+1
 
@@ -49,8 +49,5 @@ flutter:
     - assets/icons/
     - assets/google_fonts/
 
-# isar_community_generator pins analyzer <11 while riverpod_generator needs
-# >=13. Both builders run fine on 14 — the Isar pin is stale, not a real
-# incompatibility. Drop this once isar_community_generator widens its range.
 dependency_overrides:
   analyzer: ^14.0.0
