@@ -2,66 +2,91 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show debugPrint;
+import 'package:isar_community/isar.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../models/training_session.dart';
+import 'session_record.dart';
 
+/// Local session store, backed by Isar.
+///
+/// The database opens lazily on first use, so nothing has to be awaited at
+/// start-up. If it cannot open — an unsupported platform, no write access —
+/// the app keeps running with an empty history instead of crashing.
 class LocalDatabaseService {
-  final StreamController<void> _changes = StreamController<void>.broadcast();
+  static const String _legacyFileName = 'sessions.json';
 
-  List<TrainingSession>? _cache;
+  Future<Isar?>? _opening;
 
-  Future<void> close() => _changes.close();
+  Future<Isar?> _open() => _opening ??= _openOnce();
+
+  Future<void> close() async {
+    final isar = await _opening;
+    await isar?.close();
+    _opening = null;
+  }
 
   Stream<List<TrainingSession>> watchSessions(String userId) async* {
-    yield await _sessionsOf(userId);
-    await for (final _ in _changes.stream) {
-      yield await _sessionsOf(userId);
+    final isar = await _open();
+    if (isar == null) {
+      yield const [];
+      return;
     }
+    yield* isar.sessionRecords
+        .filter()
+        .userIdEqualTo(userId)
+        .sortByCreatedAtDesc()
+        .watch(fireImmediately: true)
+        .map((records) => [for (final record in records) record.toSession()]);
   }
 
   Future<void> insertSession(TrainingSession session) async {
-    final sessions = await _read();
-    await _write([
-      ...sessions.where((s) => s.id != session.id),
-      session,
-    ]);
+    final isar = await _open();
+    if (isar == null) return;
+    await isar.writeTxn(
+      () => isar.sessionRecords.putBySessionId(
+        SessionRecord.fromSession(session),
+      ),
+    );
   }
 
-  Future<List<TrainingSession>> _sessionsOf(String userId) async {
-    final sessions = await _read();
-    return sessions.where((s) => s.userId == userId).toList()
-      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-  }
-
-  Future<File> _file() async {
-    final directory = await getApplicationDocumentsDirectory();
-    return File('${directory.path}/sessions.json');
-  }
-
-  Future<List<TrainingSession>> _read() async {
-    final cached = _cache;
-    if (cached != null) return cached;
-
-    final file = await _file();
-    if (!file.existsSync()) return _cache = const [];
+  Future<Isar?> _openOnce() async {
     try {
-      final raw = jsonDecode(await file.readAsString()) as List;
-      return _cache = [
-        for (final item in raw)
-          TrainingSession.fromJson(item as Map<String, dynamic>),
-      ];
-    } on Object {
-      return _cache = const [];
+      final directory = await getApplicationDocumentsDirectory();
+      final isar = await Isar.open(
+        [SessionRecordSchema],
+        directory: directory.path,
+        name: 'ace_coach',
+      );
+      await _importLegacySessions(isar, directory);
+      return isar;
+    } on Object catch (error) {
+      debugPrint('Isar failed to open, history is disabled: $error');
+      return null;
     }
   }
 
-  Future<void> _write(List<TrainingSession> sessions) async {
-    _cache = sessions;
-    final file = await _file();
-    await file.writeAsString(
-      jsonEncode([for (final session in sessions) session.toJson()]),
-    );
-    _changes.add(null);
+  /// Moves sessions written by the previous JSON store into Isar, once.
+  Future<void> _importLegacySessions(Isar isar, Directory directory) async {
+    final file = File('${directory.path}/$_legacyFileName');
+    if (!file.existsSync()) return;
+    try {
+      final raw = jsonDecode(await file.readAsString()) as List;
+      final records = [
+        for (final item in raw)
+          SessionRecord.fromSession(
+            TrainingSession.fromJson(item as Map<String, dynamic>),
+          ),
+      ];
+      if (records.isNotEmpty) {
+        await isar.writeTxn(
+          () => isar.sessionRecords.putAllBySessionId(records),
+        );
+      }
+    } on Object catch (error) {
+      debugPrint('Legacy sessions could not be imported: $error');
+    }
+    await file.delete();
   }
 }

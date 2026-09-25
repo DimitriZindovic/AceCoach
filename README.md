@@ -1,6 +1,6 @@
 # AceCoach 🎾
 
-AI-built tennis training sessions, adapted to your level, your strokes and
+Tennis training sessions, adapted to your level, your strokes and
 today's weather. Flutter + Riverpod + Firebase.
 
 ---
@@ -8,8 +8,6 @@ today's weather. Flutter + Riverpod + Firebase.
 ## Run it
 
 ### 1. Prerequisites
-
-Flutter **3.35+** (Dart SDK 3.13+) and an Android device or emulator.
 
 ```bash
 flutter --version
@@ -19,7 +17,7 @@ flutter doctor
 ### 2. Get the setup zip
 
 Two files are deliberately **not** in this repository: the Firebase config and
-the OpenWeatherMap key. They are sent separately, outside GitHub, as
+the OpenWeatherMap key. They are sent separately, as
 `acecoach-setup.zip`.
 
 Unzip it and drop both items into the root of your clone, keeping the folder
@@ -27,8 +25,8 @@ structure:
 
 ```
 ace_coach/
-├── .env                              ← OpenWeatherMap key
-└── android/app/google-services.json  ← Firebase (Auth + AI)
+├── .env                  ← OpenWeatherMap key
+└── google-services.json  ← Firebase (Auth + AI)
 ```
 
 > **macOS:** the Finder hides `.env`. Press <kbd>⌘</kbd><kbd>⇧</kbd><kbd>.</kbd>
@@ -84,7 +82,7 @@ lib/
 ├── constants/     colour, spacing, theme and API tokens
 ├── models/        AppUser, TrainingSession, Exercise, Weather, SessionParams
 ├── services/      Firebase Auth, Firebase AI, OpenWeatherMap, geolocation,
-│                  local JSON store
+│                  Isar local store
 ├── repositories/  exceptions → typed failures
 ├── providers/     Riverpod controllers (auth, weather, session, history)
 ├── screens/       splash, auth, home, session setup, result, history, profile
@@ -94,16 +92,27 @@ lib/
 ```
 
 Architecture is one-way: `screens → providers → repositories → services`.
-Sessions are persisted as a JSON file via `path_provider` — no database engine,
-no code generation step to run before building.
+Sessions are persisted in **Isar** (`isar_community`, the maintained fork).
+Only the queried fields are columns — `sessionId`, `userId`, `createdAt` — and
+the rest of the session travels as a JSON payload, so the domain models stay
+immutable and free of persistence annotations. The database opens lazily, so
+nothing is awaited at start-up.
 
-| | |
-|---|---|
-| State | `flutter_riverpod` + `riverpod_generator` |
-| Navigation | `go_router` |
-| Backend | `firebase_auth`, `firebase_ai` |
-| HTTP | `dio` |
-| Platform | Android (`com.acecoach.ace_coach`) |
+|            |                                           |
+| ---------- | ----------------------------------------- |
+| State      | `flutter_riverpod` + `riverpod_generator` |
+| Navigation | `go_router`                               |
+| Backend    | `firebase_auth`, `firebase_ai`            |
+| Local DB   | `isar_community`                          |
+| HTTP       | `dio`                                     |
+| Platform   | Android (`com.acecoach.ace_coach`)        |
+
+Regenerate the Riverpod and Isar code after touching a provider or
+`SessionRecord`:
+
+```bash
+dart run build_runner build
+```
 
 Quality gates:
 

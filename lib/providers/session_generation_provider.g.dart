@@ -88,7 +88,7 @@ final class SessionGenerationProvider
   }
 }
 
-String _$sessionGenerationHash() => r'3c9c5d8726b22d4ef0ee2cf9cef721387ab60004';
+String _$sessionGenerationHash() => r'a62ce8f89b19f2c7439b9b61e695b13b8c88cf4c';
 
 abstract class _$SessionGeneration extends $Notifier<SessionGenerationState> {
   SessionGenerationState build();
