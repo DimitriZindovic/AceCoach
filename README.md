@@ -1,109 +1,132 @@
-# AceCoach 🎾 — login screen
+# AceCoach 🎾
 
-Branch `login-only`: the sign-in screen and Firebase email/password
-authentication. Everything else (home, session setup, AI generation, history,
-profile, OpenWeatherMap) has been removed and is added back step by step.
+AI-built tennis training sessions, adapted to your level, your strokes and
+today's weather. Flutter + Riverpod + Firebase.
 
-<p align="center">
-  <img src="docs/screenshots/02_login.png" width="200" alt="Login">
-</p>
+---
 
-## What is in
+## Run it
 
-- Email and password sign-in through Firebase Authentication.
-- Inline validation, show / hide password, failures mapped to plain messages.
-- "Forgot password?" bottom sheet sending a real reset email.
-- A bare signed-in screen with a Sign out button, so the full cycle is testable
-  while the real home screen is not back yet.
-- Material 3 light and dark themes, Poppins bundled, safe-area aware.
+### 1. Prerequisites
 
-## Quick start
+Flutter **3.35+** (Dart SDK 3.13+) and an Android device or emulator.
 
-`flutter run` works on a fresh clone, on any machine, with nothing to fill in.
+```bash
+flutter --version
+flutter doctor
+```
+
+### 2. Get the setup zip
+
+Two files are deliberately **not** in this repository: the Firebase config and
+the OpenWeatherMap key. They are sent separately, outside GitHub, as
+`acecoach-setup.zip`.
+
+Unzip it and drop both items into the root of your clone, keeping the folder
+structure:
+
+```
+ace_coach/
+├── .env                              ← OpenWeatherMap key
+└── android/app/google-services.json  ← Firebase (Auth + AI)
+```
+
+> **macOS:** the Finder hides `.env`. Press <kbd>⌘</kbd><kbd>⇧</kbd><kbd>.</kbd>
+> to reveal it, or copy it from the terminal.
+
+Both paths are already in `.gitignore`, so they can never be committed back by
+accident.
+
+### 3. Launch
 
 ```bash
 flutter pub get
-flutter run
-```
-
-Without Firebase keys the app still starts and the login screen still renders;
-signing in then reports that Firebase is not configured. Without a weather key
-the home screen loads and only the weather chip shows its error state. Nothing
-blocks.
-
-### Weather key
-
-The OpenWeatherMap key is a real secret, unlike the Firebase ones, so it is
-never committed. Put it in a git-ignored `.env` at the repository root:
-
-```
-OPENWEATHER_API_KEY=your_key
-```
-
-and pass it at build time — the file is read by the toolchain, not bundled as
-an asset, so its absence never breaks the build:
-
-```bash
 flutter run --dart-define-from-file=.env
 ```
 
-Get a key at <https://home.openweathermap.org/api_keys> (activation takes up to
-two hours).
+That's it. Without the zip the app still builds and runs — sign-in reports that
+Firebase is not configured, the weather chip shows its error state, and session
+generation is unavailable. Nothing crashes.
 
-## Firebase
+---
 
-Configuration lives in the platform files, committed with the code:
+## Demo
 
-| Platform | File |
+https://github.com/DimitriZindovic/AceCoach/raw/main/docs/acecoach-demo.mp4
+
+<sub>Or open [`docs/acecoach-demo.mp4`](docs/acecoach-demo.mp4).</sub>
+
+## Design
+
+Seven screens, Material 3, bottom navigation with four destinations.
+
+![AceCoach mockups](docs/mockups.png)
+
+---
+
+## What it does
+
+- **Firebase email/password auth** — sign up, sign in, password reset, inline
+  validation and failures mapped to plain-language messages.
+- **Weather-aware home** — current conditions from OpenWeatherMap at your
+  location, with an indoor/outdoor verdict.
+- **AI session generation** — pick a duration, a level and the strokes to work
+  on; Firebase AI Logic returns a structured plan (warm-up, drills, coaching
+  cues) adjusted to the forecast.
+- **History** — sessions are saved locally and searchable, so the app stays
+  usable offline.
+- **Profile** — training stats, preferences, sign out.
+
+## How it's built
+
+```
+lib/
+├── constants/     colour, spacing, theme and API tokens
+├── models/        AppUser, TrainingSession, Exercise, Weather, SessionParams
+├── services/      Firebase Auth, Firebase AI, OpenWeatherMap, geolocation,
+│                  local JSON store
+├── repositories/  exceptions → typed failures
+├── providers/     Riverpod controllers (auth, weather, session, history)
+├── screens/       splash, auth, home, session setup, result, history, profile
+├── widgets/       shared UI components
+├── router/        go_router shell and routes
+└── app.dart       MaterialApp, themes, auth gate
+```
+
+Architecture is one-way: `screens → providers → repositories → services`.
+Sessions are persisted as a JSON file via `path_provider` — no database engine,
+no code generation step to run before building.
+
+| | |
 |---|---|
-| Android | `android/app/google-services.json` |
-| iOS | `ios/Runner/GoogleService-Info.plist` |
-
-`Firebase.initializeApp()` reads them at start-up — there is no
-`firebase_options.dart` and no environment variable. On Android the
-`com.google.gms.google-services` Gradle plugin does the reading; it is applied
-only when the JSON is present, so a clone without it still builds.
-
-Committing these files is intentional. Client API keys are not secrets: they
-ship inside every build of the app, and Google documents committing
-`google-services.json`. Access is controlled by Firebase Security Rules and by
-the key restrictions set in the Google Cloud console.
-
-To point the app at a project:
-
-1. <https://console.firebase.google.com> → **Add project**.
-2. **Authentication → Sign-in method** → enable **Email/Password**.
-3. **Project settings → Your apps → Add app → Android**, package name
-   `com.acecoach.ace_coach`. Download `google-services.json` into
-   `android/app/`.
-4. For iOS, bundle id `com.acecoach.aceCoach`, and drop
-   `GoogleService-Info.plist` into `ios/Runner/` through Xcode.
+| State | `flutter_riverpod` + `riverpod_generator` |
+| Navigation | `go_router` |
+| Backend | `firebase_auth`, `firebase_ai` |
+| HTTP | `dio` |
+| Platform | Android (`com.acecoach.ace_coach`) |
 
 Quality gates:
 
 ```bash
-flutter analyze   # zero issues
-flutter test
+flutter analyze
 ```
 
-## Project layout
+## Notes on configuration
 
-```
-lib/
-├── constants/          colour, spacing and theme tokens
-├── models/             AppUser, AuthFailure
-├── services/           AuthService (Firebase Authentication)
-├── repositories/       AuthRepository (exceptions → AuthFailure)
-├── providers/          Riverpod providers and the auth controller
-├── screens/auth/       login_screen.dart + its form widgets
-├── screens/home/       signed_in_screen.dart (placeholder landing page)
-├── widgets/            app_logo.dart, primary_button.dart
-├── app.dart            MaterialApp, themes, AuthGate
-└── main.dart           entry point, Firebase start-up
-```
+`google-services.json` is read at start-up by the
+`com.google.gms.google-services` Gradle plugin, which is applied only when the
+file is present — that is why a clone without it still builds. The
+OpenWeatherMap key is read through `String.fromEnvironment`, so it is injected
+at build time by `--dart-define-from-file` and never bundled as an asset.
 
-Architecture: `screens → providers → repositories → services`, as on `master`.
+Need your own keys instead? Create a Firebase project, enable
+**Authentication → Email/Password** and **Firebase AI Logic**, add an Android
+app with package name `com.acecoach.ace_coach`, and download its
+`google-services.json` into `android/app/`. Then put your own key from
+[openweathermap.org](https://home.openweathermap.org/api_keys) into `.env` as
+`OPENWEATHER_API_KEY=…` (activation can take up to two hours).
 
 ## Licence
 
-Poppins is bundled under the SIL Open Font License (`assets/google_fonts/OFL.txt`).
+Poppins is bundled under the SIL Open Font License
+(`assets/google_fonts/OFL.txt`).
